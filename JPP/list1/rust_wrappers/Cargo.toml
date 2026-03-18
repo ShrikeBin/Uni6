@@ -1,0 +1,10 @@
+[package]
+name    = "test_all"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mathlib = { path = "../rust_lib" }
+
+[build-dependencies]
+# nothing extra needed; C and Ada libs linked via build.rs
