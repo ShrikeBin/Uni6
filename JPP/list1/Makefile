@@ -1,14 +1,8 @@
-# ============================================================
-#  Master Makefile — builds all tasks (C, Ada, Rust, tests)
-#  Requires: gcc, gnat, cargo, python3
-# ============================================================
-
 CC      = gcc
 CFLAGS  = -std=c99 -Wall -Wextra -O2 -fPIC
 ADAC    = gnatmake
 CARGO   = cargo
 
-# ── Directories ─────────────────────────────────────────────
 C_DIR      = c_lib
 ADA_DIR    = ada_lib
 RUST_DIR   = rust_lib
@@ -23,7 +17,6 @@ PT_DIR     = python_test
 
 all: c_lib ada_lib rust_lib c_test ada_test rust_test
 
-# ── Task 1: C library ────────────────────────────────────────
 c_lib: $(C_DIR)/libmathlib_c.a $(C_DIR)/libmathlib_c.so
 
 $(C_DIR)/mathlib.o: $(C_DIR)/mathlib.c $(C_DIR)/mathlib.h
@@ -35,7 +28,6 @@ $(C_DIR)/libmathlib_c.a: $(C_DIR)/mathlib.o
 $(C_DIR)/libmathlib_c.so: $(C_DIR)/mathlib.o
 	$(CC) -shared -o $@ $^
 
-# ── Task 2: Ada library ──────────────────────────────────────
 ada_lib: $(ADA_DIR)/libmathlib_ada.a $(ADA_DIR)/libmathlib_ada.so
 
 $(ADA_DIR)/libmathlib_ada.a: $(ADA_DIR)/mathlib.adb $(ADA_DIR)/mathlib.ads
@@ -46,11 +38,9 @@ $(ADA_DIR)/libmathlib_ada.so: $(ADA_DIR)/mathlib.adb $(ADA_DIR)/mathlib.ads
 	cd $(ADA_DIR) && gnatmake -c -fPIC mathlib.adb
 	cd $(ADA_DIR) && gcc -shared -o libmathlib_ada.so mathlib.o -lgnat
 
-# ── Task 3: Rust library ─────────────────────────────────────
 rust_lib:
 	cd $(RUST_DIR) && $(CARGO) build --release
 
-# ── Task 4: C test program ───────────────────────────────────
 c_test: c_lib ada_lib rust_lib
 	$(CC) $(CFLAGS) \
 	  $(CT_DIR)/main.c \
@@ -66,7 +56,6 @@ c_test: c_lib ada_lib rust_lib
 	  -o $(CT_DIR)/test_c
 	@echo "Run: ./$(CT_DIR)/test_c"
 
-# ── Task 5: Ada test program ─────────────────────────────────
 ada_test: c_lib ada_lib rust_lib
 	cd $(AT_DIR) && gnatmake test_main.adb \
 	  -I../$(ADA_DIR) -I../$(AW_DIR) \
@@ -80,16 +69,13 @@ ada_test: c_lib ada_lib rust_lib
 	    -Wl,-rpath,$(abspath $(RUST_DIR)/target/release)
 	@echo "Run: ./$(AT_DIR)/test_main"
 
-# ── Task 6: Rust test program ────────────────────────────────
 rust_test: c_lib ada_lib rust_lib
 	cd $(RW_DIR) && $(CARGO) build --release
 	@echo "Run: ./$(RW_DIR)/target/release/test_all"
 
-# ── Task 7: Python test ──────────────────────────────────────
 python_test: c_lib ada_lib rust_lib
 	python3 $(PT_DIR)/test_all.py
 
-# ── Clean ────────────────────────────────────────────────────
 clean:
 	rm -f $(C_DIR)/*.o $(C_DIR)/*.a $(C_DIR)/*.so $(CT_DIR)/test_c
 	rm -f $(ADA_DIR)/*.o $(ADA_DIR)/*.a $(ADA_DIR)/*.so \
