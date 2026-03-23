@@ -1,0 +1,62 @@
+# Lista 0 - Algorytmy Metaheurystyczne
+
+Dla każdego zbioru:
+- wygenerowano 1000 losowych permutacji,
+- obliczono:
+    - średnią z minimum dla grup po 10 prób,
+    - średnią z minimum dla grup po 50 prób,
+    - minimalną wartość globalną,
+- porównano z rozwiązaniem opartym na MST:
+    - wygenerowano MST dla *n* wierzchołków początkowych
+    - wybrano najlepsze rozwiązanie
+
+## Wyniki – Losowe permutacje
+
+### Western Sahara
+![](results/westernsahara.tsp_random_results.png)
+
+### Djibouti
+![](results/djibouti.tsp_random_results.png)
+
+### Quatar
+![](results/quatar.tsp_random_results.png)
+
+### Uruguay
+![](results/uruguay.tsp_random_results.png)
+
+### Zimbabwe
+![](results/zimbabwe.tsp_random_results.png)
+
+**Wniosek:**  
+Losowe rozwiązania mają dużą wariancję. Grupowanie (10 i 50 prób) nieco stabilizuje wyniki, nadal dalekie od optymalnych.
+
+## Wyniki – MST
+
+### Western Sahara
+![](results/westernsahara.tsp_MST_trials_results.png)
+
+### Djibouti
+![](results/djibouti.tsp_MST_trials_results.png)
+
+### Quatar
+![](results/quatar.tsp_MST_trials_results.png)
+
+### Uruguay
+![](results/uruguay.tsp_MST_trials_results.png)
+
+### Zimbabwe
+![](results/zimbabwe.tsp_MST_trials_results.png)
+
+**Wniosek:**  
+Rozwiązanie oparte na MST daje znacznie lepsze i stabilniejsze wyniki niż losowe permutacje.
+
+## Obserwacje
+
+- W przestrzeni euklidesowej optymalny cykl *nie zawiera przecinających się krawędzi* - cięcia występujące w MST możnaby usunąć co poprawi rozwiązanie
+
+<br><br>
+
+<div style="text-align: right;">
+Jan Ryszkiewicz 
+282210
+</div>
