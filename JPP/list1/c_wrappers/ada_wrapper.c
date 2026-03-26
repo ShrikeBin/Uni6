@@ -1,11 +1,6 @@
-/*
- * Thin C wrapper around Ada Mathlib exported symbols.
- * Ada package must be compiled with Convention => C exports (see ads file).
- * This file simply re-exports under stable C names.
- */
 #include "ada_wrapper.h"
 
-/* Declarations of the raw Ada exported symbols */
+// Remember to compile ada with C convention (See .ads file for details)
 extern uint64_t mathlib__gcd(uint64_t a, uint64_t b);
 extern uint64_t mathlib__smallest_prime_divisor(uint64_t n);
 extern uint64_t mathlib__euler_totient(uint64_t n);

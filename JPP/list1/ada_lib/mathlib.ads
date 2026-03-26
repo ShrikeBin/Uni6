@@ -1,26 +1,27 @@
+with Interfaces.C; use Interfaces.C;
 package Mathlib is
+   type Natural_64  is mod 2**64;
+   type Integer_64  is range -2**63 .. 2**63 - 1;
 
-   type Natural_64 is mod 2**64;
-   type Integer_64 is range -2**63 .. 2**63 - 1;
+   function GCD(A, B : Natural_64) return Natural_64
+     with Convention => C, Export => True,
+          External_Name => "mathlib__gcd";
 
-   -- 1. Greatest Common Divisor
-   function GCD (A, B : Natural_64) return Natural_64;
+   function Smallest_Prime_Divisor(N : Natural_64) return Natural_64
+     with Convention => C, Export => True,
+          External_Name => "mathlib__smallest_prime_divisor";
 
-   -- 2. Smallest prime divisor (N > 1)
-   function Smallest_Prime_Divisor (N : Natural_64) return Natural_64;
+   function Euler_Totient(N : Natural_64) return Natural_64
+     with Convention => C, Export => True,
+          External_Name => "mathlib__euler_totient";
 
-   -- 3. Euler totient function
-   function Euler_Totient (N : Natural_64) return Natural_64;
-
-   -- 4. Diophantine solution structure
    type Diophantine_Solution is record
-      Has_Solution : Boolean;
-      X            : Integer_64;
-      Y            : Integer_64;
-   end record;
+      Has_Solution : int;
+      X, Y         : long_long;
+   end record
+     with Convention => C;
 
-   -- Solve ax - by = c over natural numbers
-   function Solve_Diophantine
-     (A, B, C : Integer_64) return Diophantine_Solution;
-
+   function Solve_Diophantine(A, B, C : Integer_64) return Diophantine_Solution
+     with Convention => C, Export => True,
+          External_Name => "mathlib__solve_diophantine";
 end Mathlib;

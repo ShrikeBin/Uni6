@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-/* Ada Mathlib — C-visible signatures (Ada exports with Convention C) */
-
 uint64_t ada_gcd(uint64_t a, uint64_t b);
 uint64_t ada_smallest_prime_divisor(uint64_t n);
 uint64_t ada_euler_totient(uint64_t n);

@@ -1,5 +1,3 @@
-//! Rust test program calling C, Ada, and Rust libraries.
-
 use mathlib as rust_lib;
 
 /* ---- C library FFI ---- */

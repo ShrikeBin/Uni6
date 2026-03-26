@@ -1,11 +1,6 @@
-"""
-Python test program calling C, Ada and Rust shared libraries via ctypes.
-"""
 import ctypes
 import os
-import sys
 
-# ── Locate libraries ──────────────────────────────────────────────────────────
 BUILD = os.path.join(os.path.dirname(__file__), "..")
 
 def load(name: str):
@@ -23,7 +18,6 @@ libc_math  = load("c_lib/libmathlib_c.so")
 libada     = load("ada_lib/libmathlib_ada.so")
 librust    = load("rust_lib/target/release/libmathlib.so")
 
-# ── Diophantine result structure (same layout for all three libs) ─────────────
 class DiophSol(ctypes.Structure):
     _fields_ = [
         ("has_solution", ctypes.c_int),
@@ -31,7 +25,6 @@ class DiophSol(ctypes.Structure):
         ("y",            ctypes.c_int64),
     ]
 
-# ── Bind C library ────────────────────────────────────────────────────────────
 def bind_c(lib, prefix=""):
     lib[f"{prefix}gcd"]                   = (ctypes.c_uint64, [ctypes.c_uint64, ctypes.c_uint64])
     lib[f"{prefix}smallest_prime_divisor"]= (ctypes.c_uint64, [ctypes.c_uint64])
@@ -68,13 +61,11 @@ rust_syms = {
 }
 setup(librust, rust_syms)
 
-# ── Helper ────────────────────────────────────────────────────────────────────
-def fmt_dioph(label: str, sol: DiophSol) -> str:
+def print_dioph(label: str, sol: DiophSol) -> str:
     if sol.has_solution:
         return f"  [{label}] x={sol.x}, y={sol.y}"
     return f"  [{label}] No natural solution"
 
-# ── Tests ─────────────────────────────────────────────────────────────────────
 print("=== GCD(48, 18) ===")
 print(f"  C:    {libc_math.gcd(48, 18)}")
 print(f"  Ada:  {libada.mathlib__gcd(48, 18)}")
@@ -91,6 +82,6 @@ print(f"  Ada:  {libada.mathlib__euler_totient(36)}")
 print(f"  Rust: {librust.rust_euler_totient(36)}")
 
 print("\n=== Diophantine: 5x - 3y = 1 ===")
-print(fmt_dioph("C",    libc_math.solve_diophantine(5, 3, 1)))
-print(fmt_dioph("Ada",  libada.mathlib__solve_diophantine(5, 3, 1)))
-print(fmt_dioph("Rust", librust.rust_solve_diophantine(5, 3, 1)))
+print(print_dioph("C",    libc_math.solve_diophantine(5, 3, 1)))
+print(print_dioph("Ada",  libada.mathlib__solve_diophantine(5, 3, 1)))
+print(print_dioph("Rust", librust.rust_solve_diophantine(5, 3, 1)))

@@ -2,7 +2,7 @@ with Ada.Text_IO;        use Ada.Text_IO;
 with Interfaces.C;       use Interfaces.C;
 with C_Binding;
 with Rust_Binding;
-with Mathlib;            -- Ada own library
+with Mathlib;
 
 procedure Test_Main is
 
@@ -48,7 +48,7 @@ begin
       RS : constant Rust_Binding.Rust_Dioph_Sol :=
              Rust_Binding.Solve_Diophantine (5, 3, 1);
    begin
-      Print_Dioph ("Ada",  (if AS.Has_Solution then 1 else 0),
+      Print_Dioph ("Ada",   Integer (AS.Has_Solution),
                    Long_Integer (AS.X), Long_Integer (AS.Y));
       Print_Dioph ("C",    Integer (CS.Has_Solution),
                    Long_Integer (CS.X), Long_Integer (CS.Y));

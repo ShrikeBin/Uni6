@@ -1,17 +1,13 @@
-//! Mathematical library: GCD, smallest prime divisor,
-//! Euler totient, linear Diophantine solver.
-
-/// 1. Greatest Common Divisor (iterative Euclidean)
 pub fn gcd(mut a: u64, mut b: u64) -> u64 {
     while b != 0 {
         let t = b;
         b = a % b;
         a = t;
     }
-    a
+    return a;
 }
 
-/// 2. Smallest prime divisor of n > 1
+
 pub fn smallest_prime_divisor(n: u64) -> u64 {
     assert!(n > 1, "n must be greater than 1");
     if n % 2 == 0 {
@@ -24,10 +20,9 @@ pub fn smallest_prime_divisor(n: u64) -> u64 {
         }
         i += 2;
     }
-    n
+    return n;
 }
 
-/// 3. Euler's totient function
 pub fn euler_totient(n: u64) -> u64 {
     let mut result = n;
     let mut temp = n;
@@ -44,10 +39,9 @@ pub fn euler_totient(n: u64) -> u64 {
     if temp > 1 {
         result -= result / temp;
     }
-    result
+    return result;
 }
 
-/// Result of the Diophantine equation ax - by = c
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DiophantineSolution {
     pub has_solution: bool,
@@ -55,26 +49,24 @@ pub struct DiophantineSolution {
     pub y: i64,
 }
 
-/// Extended GCD: returns (gcd, x, y) such that a*x + b*y = gcd
 fn extended_gcd(a: i64, b: i64) -> (i64, i64, i64) {
     if b == 0 {
-        (a, 1, 0)
+        return (a, 1, 0);
     } else {
         let (g, x1, y1) = extended_gcd(b, a % b);
-        (g, y1, x1 - (a / b) * y1)
+        return (g, y1, x1 - (a / b) * y1);
     }
 }
 
 fn ceil_div(num: i64, den: i64) -> i64 {
     let q = num / den;
     if num % den != 0 && (num < 0) == (den < 0) {
-        q + 1
+        return q + 1;
     } else {
-        q
+        return q;
     }
 }
 
-/// 4. Solve ax - by = c over natural numbers (x, y >= 1)
 pub fn solve_diophantine(a: i64, b: i64, c: i64) -> DiophantineSolution {
     let no_sol = DiophantineSolution { has_solution: false, x: 0, y: 0 };
     if a <= 0 || b <= 0 {
@@ -98,15 +90,15 @@ pub fn solve_diophantine(a: i64, b: i64, c: i64) -> DiophantineSolution {
     let y_sol = -y0 + step_y * t;
 
     if x_sol > 0 && y_sol > 0 {
-        DiophantineSolution { has_solution: true, x: x_sol, y: y_sol }
+        return DiophantineSolution { has_solution: true, x: x_sol, y: y_sol };
     } else {
-        no_sol
+        return no_sol;
     }
 }
 
-/* ------------------------------------------------------------------ */
-/*  C-compatible FFI exports                                           */
-/* ------------------------------------------------------------------ */
+// -----------------------------------------------------------------
+//                           C exports
+// -----------------------------------------------------------------
 
 #[repr(C)]
 pub struct CDiophantineSolution {

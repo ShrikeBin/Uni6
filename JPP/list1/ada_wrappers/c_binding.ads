@@ -2,8 +2,6 @@ with Interfaces.C; use Interfaces.C;
 
 package C_Binding is
    pragma Pure;
-
-   -- Mirror of C DiophantineSolution
    type C_Dioph_Sol is record
       Has_Solution : int;
       X            : long;
