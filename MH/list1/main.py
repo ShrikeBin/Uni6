@@ -42,6 +42,13 @@ def get_best_neighbor_naive(permutation: np.ndarray, coordinates: np.ndarray) ->
         Browse all 2-opt neighbors and return the best one.
     '''
     # TODO: Implement this to actually work and work efficiently.
+    for i in range(len(permutation) - 1):
+        for j in range(i + 2, len(permutation) + (i > 0)):
+            new_perm = permutation.copy()
+            new_perm[i:j] = new_perm[i:j][::-1]
+            new_distance = calculate_distance(new_perm, coordinates)
+            if new_distance < calculate_distance(permutation, coordinates):
+                return new_perm, new_distance
     pass
 
 def naive_local_search(coordinates: np.ndarray, init: np.ndarray) -> np.ndarray:
@@ -51,8 +58,10 @@ def naive_local_search(coordinates: np.ndarray, init: np.ndarray) -> np.ndarray:
     best_perm = init.copy()
     best_dist = calculate_distance(best_perm, coordinates)
     improved = True
-
+    STEP = 0
     while improved:
+        STEP += 1
+        print(f"Current best distance: {best_dist:.4f}, at step {STEP}              ", end='\r')
         improved = False
         new_perm, new_distance = get_best_neighbor_naive(best_perm, coordinates)
         if new_distance < best_dist:
@@ -61,21 +70,26 @@ def naive_local_search(coordinates: np.ndarray, init: np.ndarray) -> np.ndarray:
             improved = True
     return best_perm
 
-for tsp_file in glob.glob('./data/*.tsp'):
-    print(f"Processing {tsp_file}...")
-    coordinates = read_tsp_file(tsp_file)
-    n = len(coordinates)
-    
-    best_overall_perm = None
-    best_overall_dist = float('inf')
-    
-    for _ in tqdm(range(TRIALS), desc="Trials"):
-        init_perm = np.random.permutation(n)
-        best_perm = naive_local_search(coordinates, init_perm)
-        best_dist = calculate_distance(best_perm, coordinates)
+TRIALS = 1
+#TODO move to C++.....
+if __name__ == "__main__":
+    for tsp_file in glob.glob('./data/*.tsp'):
+        if tsp_file not in {"./data/quatar.tsp"}:
+            continue
+        print(f"Processing {tsp_file}...")
+        coordinates = read_tsp_file(tsp_file)
+        n = len(coordinates)
         
-        if best_dist < best_overall_dist:
-            best_overall_dist = best_dist
-            best_overall_perm = best_perm
-    
-    print(f"Best distance for {tsp_file}: {best_overall_dist}")
+        best_overall_perm = None
+        best_overall_dist = float('inf')
+        
+        for _ in range(TRIALS):
+            init_perm = np.random.permutation(n)
+            best_perm = naive_local_search(coordinates, init_perm)
+            best_dist = calculate_distance(best_perm, coordinates)
+            
+            if best_dist < best_overall_dist:
+                best_overall_dist = best_dist
+                best_overall_perm = best_perm
+        
+        print(f"Best distance for {tsp_file}: {best_overall_dist}")
