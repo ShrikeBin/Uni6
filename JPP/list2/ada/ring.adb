@@ -5,7 +5,6 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Ring is
 
-   -- Reduce any integer to [0, N-1]
    function Normalize (X : Integer) return Integer is
       R : Integer := X mod N;
    begin
@@ -13,7 +12,6 @@ package body Ring is
       return R;
    end Normalize;
 
-   -- Extended Euclidean: finds GCD and S such that A*S ≡ GCD (mod N)
    procedure Extended_GCD
      (A, B : in  Integer;
       GCD  : out Integer;
@@ -33,8 +31,6 @@ package body Ring is
       GCD := Old_R;
       S   := Old_S;
    end Extended_GCD;
-
-   -- -------------------------------------------------------------------------
 
    function To_Element (Value : Integer) return Element is
    begin

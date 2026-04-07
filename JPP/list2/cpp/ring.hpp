@@ -1,6 +1,11 @@
 #ifndef RING_HPP
 #define RING_HPP
 
+#include <iostream>
+#include <algorithm>
+#include <stdexcept>
+#include <string>
+
 template<int N>
 class Ring {
     int value;
@@ -8,6 +13,7 @@ class Ring {
     static int normalize(int x) { return ((x % N) + N) % N; }
 
     static int extended_gcd(int a, int b, int &s) {
+        // a*s + b*t = gcd(a, b)
         int old_s = 1, ss = 0, old_r = a, r = b;
         while (r != 0) {
             int q = old_r / r;
@@ -15,7 +21,7 @@ class Ring {
             std::swap(old_s -= q * ss, ss);
         }
         s = old_s;
-        return old_r; // gcd
+        return old_r; // gcd(a, b)
     }
 
     static int inverse_val(int x) {
@@ -54,7 +60,7 @@ public:
 
     // Streams
     friend std::ostream& operator<<(std::ostream& os, const Ring& r) {
-        return os << r.value << " (mod " << N << ")";
+        return os << r.value << " [mod" << N << "]";
     }
     friend std::istream& operator>>(std::istream& is, Ring& r) {
         int v; is >> v; r = Ring(v); return is;
