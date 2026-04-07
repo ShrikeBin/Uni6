@@ -43,7 +43,6 @@ int_fast32_t diff_after_invert(const std::vector<uint_fast32_t>& tour, uint_fast
 LocalSearchResult local_search_naive(std::vector<uint_fast32_t> initial_tour, const std::vector<std::vector<uint_fast32_t>>& dist_matrix);
 LocalSearchResult local_search_n_random(std::vector<uint_fast32_t> initial_tour, const std::vector<std::vector<uint_fast32_t>>& dist_matrix, std::mt19937& GEN);
 
-///TODO: HERE FIX THOSE TO BE FASTER
 MSTresult prim_mst(const std::vector<City>& cities, const std::vector<std::vector<uint_fast32_t>>& dist_matrix);
 void dfs(int u, const std::vector<std::vector<int>>& adj, std::vector<bool>& visited, std::vector<int>& tour);
 std::vector<uint_fast32_t> mst_to_tsp(const std::vector<std::pair<int, int>>& mst_edges, int num_vertices, int start_vertex);

@@ -2,13 +2,19 @@
 
 #include <filesystem>
 #include <chrono>
+#include <algorithm>
 
 // Global random generator
 std::random_device RD;
 std::mt19937 GEN(RD());
 
 void run_for_file(const std::vector<City>& cities, const std::string& filename) {
-    int n = cities.size();
+    unsigned int n = cities.size();
+    const unsigned int LIMIT =  (n < 200)  ? 100 :
+                                (n < 500)  ? 50 :
+                                (n < 1000) ? 35  :
+                                (n < 2000) ? 15  : 
+                                (n < 4000) ? 5  : 2;
 
     std::cout << "Loaded file: " << filename << " | Number of vertices (n): " << n << "\n\n";
 
@@ -22,68 +28,92 @@ void run_for_file(const std::vector<City>& cities, const std::string& filename) 
     long long sum_dist_1 = 0;
     long long sum_steps_1 = 0;
     int best_dist_1 = std::numeric_limits<int>::max();
+    std::vector<uint_fast32_t> best_tour_naive = random_tour(n, GEN);
 
-    for (uint_fast32_t k = 0; k < n; ++k) {
-        std::cout<< "Iteration " << k + 1 << "/" << n << "\r" << std::flush;
+    for (uint_fast32_t k = 0; k < LIMIT; ++k) {
+        std::cout<< "Iteration " << k + 1 << "/" << LIMIT << "\r" << std::flush;
         std::vector<uint_fast32_t> initial_tour = random_tour(n, GEN);
         LocalSearchResult result = local_search_naive(initial_tour, dist_matrix);
         
         sum_dist_1 += result.distance;
         sum_steps_1 += result.improvement_steps;
-        if (result.distance < best_dist_1) best_dist_1 = result.distance;
+        if (result.distance < best_dist_1){
+            best_tour_naive = result.tour;
+            best_dist_1 = result.distance;
+        }
     }
 
-    std::cout << "TASK 1:\n";
-    std::cout << "Average solution value: " << static_cast<double>(sum_dist_1) / n << "\n";
-    std::cout << "Average improvement steps: " << static_cast<double>(sum_steps_1) / n << "\n";
-    std::cout << "Best solution: " << best_dist_1 << "\n\n";
+    std::cout << "TASK 1:   \n";
+    std::cout << "Average solution value: " << static_cast<double>(sum_dist_1) / LIMIT << "\n";
+    std::cout << "Average improvement steps: " << static_cast<double>(sum_steps_1) / LIMIT << "\n";
+    std::cout << "Best solution: " << best_dist_1 << "\n";
+    std::cout << "\n====================[TOUR]=====================\n";
+    for(uint_fast32_t city_id : best_tour_naive) {
+        std::cout << city_id << ">";
+    }
+    std::cout << "\n===============================================\n\n";
 
     long long sum_dist_2 = 0;
     long long sum_steps_2 = 0;
     int best_dist_2 = std::numeric_limits<int>::max();
+    std::vector<uint_fast32_t> best_tour_n_random = random_tour(n, GEN);
 
-    for (uint_fast32_t k = 0; k < n; ++k) {
+    for (uint_fast32_t k = 0; k < LIMIT*10; ++k) {
+        std::cout<< "Iteration " << k + 1 << "/" << LIMIT*10 << "\r" << std::flush;
         std::vector<uint_fast32_t> initial_tour = random_tour(n, GEN);
         LocalSearchResult result = local_search_n_random(initial_tour, dist_matrix, GEN);
         
         sum_dist_2 += result.distance;
         sum_steps_2 += result.improvement_steps;
-        if (result.distance < best_dist_2) best_dist_2 = result.distance;
+        if (result.distance < best_dist_2) {
+            best_tour_n_random = result.tour;
+            best_dist_2 = result.distance;
+        }
     }
 
-    std::cout << "TASK 2:\n";
-    std::cout << "Average solution value: " << static_cast<double>(sum_dist_2) / n << "\n";
-    std::cout << "Average improvement steps: " << static_cast<double>(sum_steps_2) / n << "\n";
-    std::cout << "Best solution: " << best_dist_2 << "\n\n";
+    std::cout << "TASK 2:   \n";
+    std::cout << "Average solution value: " << static_cast<double>(sum_dist_2) / LIMIT << "\n";
+    std::cout << "Average improvement steps: " << static_cast<double>(sum_steps_2) / LIMIT << "\n";
+    std::cout << "Best solution: " << best_dist_2 << "\n";
+    std::cout << "\n====================[TOUR]=====================\n";
+    for(uint_fast32_t city_id : best_tour_n_random) {
+        std::cout << city_id << ">";
+    }
+    std::cout << "\n===============================================\n\n";
 
     long long sum_dist_3 = 0;
     long long sum_steps_3 = 0;
     int best_dist_3 = std::numeric_limits<int>::max();
+    std::vector<uint_fast32_t> best_tour_MST = random_tour(n, GEN);
 
-    std::uniform_int_distribution<> start_vertex_dist(1, n);
-    int iterations = std::ceil(std::sqrt(n));
+    std::uniform_int_distribution<> start_vertex_dist(0, n - 1);
     MSTresult mst_result = prim_mst(cities, dist_matrix);
 
-    for (int k = 0; k < iterations; ++k) {
-        // Losowy wierzchołek startowy dla DFS
-        int start_vertex = start_vertex_dist(GEN);
+    for (uint_fast32_t k = 0; k < LIMIT; ++k) {
+        std::cout<< "Iteration " << k + 1 << "/" << LIMIT << "\r" << std::flush;
 
-        // cykl TSP z drzewa MST
-        std::vector<uint_fast32_t> initial_tour = mst_to_tsp(mst_result.edges, n, start_vertex);
-
-        // klasyczne lokalne przeszukiwanie
+        uint_fast32_t random_start_vertex = start_vertex_dist(GEN);
+        std::vector<uint_fast32_t> initial_tour = mst_to_tsp(mst_result.edges, n, random_start_vertex);
         LocalSearchResult result = local_search_naive(initial_tour, dist_matrix);
         
         sum_dist_3 += result.distance;
         sum_steps_3 += result.improvement_steps;
-        if (result.distance < best_dist_3) best_dist_3 = result.distance;
+        if (result.distance < best_dist_3) {
+            best_tour_MST = result.tour;
+            best_dist_3 = result.distance;
+        }
     }
 
-    std::cout << "TASK 3: \n";
+    std::cout << "TASK 3:   \n";
     std::cout << "Weight of the Minimum Spanning Tree (MST): " << mst_result.total_weight << "\n";
-    std::cout << "Average solution value: " << static_cast<double>(sum_dist_3) / iterations << "\n";
-    std::cout << "Average improvement steps: " << static_cast<double>(sum_steps_3) / iterations << "\n";
+    std::cout << "Average solution value: " << static_cast<double>(sum_dist_3) / LIMIT << "\n";
+    std::cout << "Average improvement steps: " << static_cast<double>(sum_steps_3) / LIMIT << "\n";
     std::cout << "Best solution: " << best_dist_3 << "\n";
+    std::cout << "\n====================[TOUR]=====================\n";
+    for(uint_fast32_t city_id : best_tour_MST) {
+        std::cout << city_id << ">";
+    }
+    std::cout << "\n===============================================\n";
 }
 
 int main(int argc, char* argv[]) {

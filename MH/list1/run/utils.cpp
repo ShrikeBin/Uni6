@@ -80,7 +80,7 @@ LocalSearchResult local_search_naive(std::vector<uint_fast32_t> initial_tour, co
 
     bool improvement = true;
     while(improvement) {
-        std::cout<< "Improvement step " << improvement_steps + 1 << " current distance: " << current_distance << "\n" << std::flush;
+        std::cerr << "Improvement steps: " << improvement_steps << ", current distance: " << current_distance << "\n";
         improvement = false;
 
         int_fast32_t best_difference = 0;
@@ -147,66 +147,75 @@ LocalSearchResult local_search_n_random(std::vector<uint_fast32_t> initial_tour,
     return LocalSearchResult{initial_tour, current_distance, improvement_steps};
 }
 
-///TODO: FIX THOSE TO BE FASTER
 MSTresult prim_mst(const std::vector<City>& cities, const std::vector<std::vector<uint_fast32_t>>& dist_matrix) {
-    int n = cities.size();
+    const size_t n = cities.size();
+    if (n == 0) return {{}, 0};
+
+    const uint_fast32_t INF = std::numeric_limits<uint_fast32_t>::max();
     
-    // pomocnicza
     std::vector<bool> visited(n, false);
-    
-    // min_dist[i] będzie przechowywać minimalną odległość od drzewa MST do wierzchołka i
-    std::vector<int> min_dist(n, std::numeric_limits<int>::max());
-    
-    // -1 brak rodzica
+    std::vector<uint_fast32_t> min_dist(n, INF);
     std::vector<int> parent(n, -1); 
 
     std::vector<std::pair<int, int>> edges;
-    int total_weight = 0;
+    edges.reserve(n - 1);
+    uint_fast32_t total_weight = 0;
 
     min_dist[0] = 0;
 
-    for (int step = 0; step < n; ++step) {
-        // Znajdź nieodwiedzony wierzchołek z najmniejszym dystansem do MST
+    for (size_t step = 0; step < n; ++step) {
         int u = -1;
-        int current_min = std::numeric_limits<int>::max();
-        
-        for (int i = 0; i < n; ++i) {
+        uint_fast32_t current_min = INF;
+
+        for (size_t i = 0; i < n; ++i) {
             if (!visited[i] && min_dist[i] < current_min) {
                 current_min = min_dist[i];
-                u = i;
+                u = static_cast<int>(i);
             }
         }
 
-        visited[u] = true;    // już odwiedzony
+        if (u == -1) break;
+
+        visited[u] = true;
+        total_weight += current_min;
         
         if (parent[u] != -1) {
-            // zapisanie id miast zamiast indeksów
             edges.push_back({cities[parent[u]].id, cities[u].id});
-            total_weight += current_min;
         }
 
-        // aktualizacja min_dist dla sąsiadów u
-        for (int v = 0; v < n; ++v) {
+        const auto& current_dist_row = dist_matrix[u];
+        for (size_t v = 0; v < n; ++v) {
             if (!visited[v]) {
-                int dist = dist_matrix[u][v];
-                if (dist < min_dist[v]) {
-                    min_dist[v] = dist;
-                    parent[v] = u; // wierzchołek u jest najlepszym rodzicem dla v
+                uint_fast32_t d = current_dist_row[v];
+                if (d < min_dist[v]) {
+                    min_dist[v] = d;
+                    parent[v] = u;
                 }
             }
         }
     }
 
-    return {edges, total_weight};
+    return {edges, static_cast<int>(total_weight)};
 }
 
-void dfs(int u, const std::vector<std::vector<int>>& adj, std::vector<bool>& visited, std::vector<uint_fast32_t>& tour) {
-    visited[u] = true;
-    tour.push_back(u);
-    
-    for (int v : adj[u]) {
-        if (!visited[v]) {
-            dfs(v, adj, visited, tour);
+void dfs(int start_node, const std::vector<std::vector<int>>& adj, std::vector<bool>& visited, std::vector<uint_fast32_t>& tour) {
+    std::vector<int> stack;
+    stack.reserve(adj.size());
+    stack.push_back(start_node);
+
+    while (!stack.empty()) {
+        int u = stack.back();
+        stack.pop_back();
+
+        if (!visited[u]) {
+            visited[u] = true;
+            tour.push_back(static_cast<uint_fast32_t>(u));
+            const auto& neighbors = adj[u];
+            for (auto it = neighbors.rbegin(); it != neighbors.rend(); ++it) {
+                if (!visited[*it]) {
+                    stack.push_back(*it);
+                }
+            }
         }
     }
 }
@@ -215,16 +224,15 @@ std::vector<uint_fast32_t> mst_to_tsp(const std::vector<std::pair<int, int>>& ms
 
     std::vector<std::vector<int>> adj(num_vertices + 1);
     
-    // lista sąsiedztwa dla drzewa MST
+    // -1 to avoid indexing issues since cities are 1-indexed in the input files but need 0-indexed for our internal representation.
     for (const auto& edge : mst_edges) {
-        adj[edge.first-1].push_back(edge.second-1);
-        adj[edge.second-1].push_back(edge.first-1);
+        adj[edge.first - 1].push_back(edge.second - 1);
+        adj[edge.second - 1].push_back(edge.first - 1);
     }
 
     std::vector<bool> visited(num_vertices + 1, false);
     std::vector<uint_fast32_t> initial_tour;
     
-    // konstruowanie TSP poprzez DFS po drzewie MST poczynając od start_vertex
     dfs(start_vertex, adj, visited, initial_tour);
 
     return initial_tour;
