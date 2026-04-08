@@ -127,7 +127,7 @@ package body Ring is
 
    procedure Put (E : Element) is
    begin
-      Ada.Text_IO.Put (E.Value'Image & " (mod" & N'Image & ")");
+      Ada.Text_IO.Put (E.Value'Image & " [mod" & N'Image & "]");
    end Put;
 
    procedure Put_Line (E : Element) is

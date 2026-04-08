@@ -5,11 +5,11 @@ template<int N>
 void test(int a, int b) {
     Ring<N> x(a), y(b);
     std::cout << "Testing with base " << N << ", a = " << a << ", b = " << b << ":\n";
-    std::cout << "x: "      << x        << "\n";
-    std::cout << "y: "      << y        << "\n";
+    std::cout << "x:     "  << x        << "\n";
+    std::cout << "y:     "  << y        << "\n";
     std::cout << "x + y: "  << x + y    << "\n";
     std::cout << "x - y: "  << x - y    << "\n";
-    std::cout << "-x: "     << -x       << "\n";
+    std::cout << "-x:    "  << -x       << "\n";
     std::cout << "x * y: "  << x * y    << "\n";
     try {
         std::cout << "x / y: " << x / y << "\n";
