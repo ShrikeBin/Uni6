@@ -11,7 +11,7 @@ Best solution: 188565
 ===============================================
 
 TASK 2:   
-Average solution value: 3.6526e+06
+Average solution value: 365260
 Average improvement steps: 97810.5
 Best solution: 341196
 
@@ -110,7 +110,7 @@ Best solution: 435011
 ===============================================
 
 TASK 2:   
-Average solution value: 8.66317e+06
+Average solution value: 866317
 Average improvement steps: 86958.5
 Best solution: 793894
 
@@ -143,7 +143,7 @@ Best solution: 229593
 ===============================================
 
 TASK 2:   
-Average solution value: 5.40302e+06
+Average solution value: 540302
 Average improvement steps: 107502
 Best solution: 453046
 
@@ -209,7 +209,7 @@ Best solution: 92571
 ===============================================
 
 TASK 2:   
-Average solution value: 1.76103e+06
+Average solution value: 176103
 Average improvement steps: 26295.5
 Best solution: 147970
 
@@ -233,7 +233,7 @@ Finished ../data/oman.tsp in 328.807 seconds.
 Loaded file: ../data/canada.tsp | Number of vertices (n): 4663
 
 TASK 1:   
-Average solution value: 1.43718e+06
+Average solution value: 1437180
 Average improvement steps: 6768
 Best solution: 1428806
 
@@ -242,7 +242,7 @@ Best solution: 1428806
 ===============================================
 
 TASK 2:   
-Average solution value: 2.76723e+07
+Average solution value: 2767230
 Average improvement steps: 65116.5
 Best solution: 2489109
 
@@ -252,7 +252,7 @@ Best solution: 2489109
 
 TASK 3:   
 Weight of the Minimum Spanning Tree (MST): 1118421
-Average solution value: 1.36854e+06
+Average solution value: 1368540
 Average improvement steps: 997.5
 Best solution: 1365821
 
@@ -275,7 +275,7 @@ Best solution: 85102
 ===============================================
 
 TASK 2:   
-Average solution value: 1.65514e+06
+Average solution value: 165514
 Average improvement steps: 8325.83
 Best solution: 133153
 
@@ -308,7 +308,7 @@ Best solution: 100940
 ===============================================
 
 TASK 2:   
-Average solution value: 1.51021e+06
+Average solution value: 151021
 Average improvement steps: 12601.5
 Best solution: 136047
 
