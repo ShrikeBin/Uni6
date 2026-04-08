@@ -41,14 +41,14 @@ all_test: cpp ada rust
 	@echo "$(BOLD)$(CYAN)           Running all tests          $(RESET)"
 	@echo "$(BOLD)$(CYAN)══════════════════════════════════════$(RESET)"
 	
-	@echo "$(YELLOW)▶ Rust:$(RESET)"
-	./$(RW_DIR)/target/release/test_rust || true
+	@echo "\n$(YELLOW)▶ C++:$(RESET)"
+	./$(CT_DIR)/test_cpp || true
 	
 	@echo "\n$(YELLOW)▶ Ada:$(RESET)"
 	./$(AT_DIR)/test_ada || true
 	
-	@echo "\n$(YELLOW)▶ C++:$(RESET)"
-	./$(CT_DIR)/test_cpp || true
+	@echo "$(YELLOW)▶ Rust:$(RESET)"
+	./$(RW_DIR)/target/release/test_rust || true
 
 	@echo "\n$(BOLD)$(CYAN)══════════════════════════════════════$(RESET)"
 	@echo "$(BOLD)$(CYAN)          All tests finished           $(RESET)"
