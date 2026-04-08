@@ -2,3 +2,4 @@
 **/*.quarto_ipynb
 data/*.tsp
 run/run
+/results/
