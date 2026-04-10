@@ -1,5 +1,53 @@
 # Lista 1 - Algorytmy Metaheurystyczne
 
+Dla każdego zbioru:
+- wygenerowano liczbę losowych permutacji początkowych
+- przeprowadzono:
+    - naiwny Local Search,
+    - usprawniony Local Search (pierwsze n inwersji),
+    - wykonano MST i następnie Local Search na otrzymanym cyklu,
+- dla każdego zebrano:
+    - średnią wartość najlepszego rozwiązania
+    - średnią liczbę kroków poprawy
+    - najlepsze rozwiązanie
+- dodatkowo dla MST - wagę MST
+
+## Wyniki:
+
+### Western Sahara
+![](results/westernsahara_SUMMARYresults.png)
+
+### Djibouti
+![](results/djibouti_SUMMARYresults.png)
+
+### Quatar
+![](results/quatar_SUMMARYresults.png)
+
+### Uruguay
+![](results/uruguay_SUMMARYresults.png)
+
+### Zimbabwe
+![](results/zimbabwe_SUMMARY.png)
+
+### Canada
+![](results/canada_SUMMARYresults.png)
+
+### Egypt
+![](results/egypt_SUMMARYresults.png)
+
+### Irleand
+![](results/ireland_SUMMARYresults.png)
+
+### Oman
+![](results/oman_SUMMARYresults.png)
+
+### Tanzania
+![](results/tanzania_SUMMARYresults.png)
+
+**Wniosek:**  
+Przeprowadzenie rozwiązania MST daje bardzo szybko bardzo dobrą podstawę do przeprowadzenia algorytmu Local Search.
+Usprawniony Local Search wpada w lokalne minima i kończy pracę, złożoność obliczeniowa naiwnego Local Search sprawia że jego użycie jest niepraktyczne mimo, że daje dobre wyniki.
+
 <br><br>
 
 <div style="text-align: right;">
