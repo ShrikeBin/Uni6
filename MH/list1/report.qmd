@@ -15,34 +15,34 @@ Dla każdego zbioru:
 ## Wyniki:
 
 ### Western Sahara
-![](results/westernsahara_SUMMARYresults.png)
+![](results/westernsahara_SUMMARY.png)
 
 ### Djibouti
-![](results/djibouti_SUMMARYresults.png)
+![](results/djibouti_SUMMARY.png)
 
 ### Quatar
-![](results/quatar_SUMMARYresults.png)
+![](results/quatar_SUMMARY.png)
 
 ### Uruguay
-![](results/uruguay_SUMMARYresults.png)
+![](results/uruguay_SUMMARY.png)
 
 ### Zimbabwe
 ![](results/zimbabwe_SUMMARY.png)
 
 ### Canada
-![](results/canada_SUMMARYresults.png)
+![](results/canada_SUMMARY.png)
 
 ### Egypt
-![](results/egypt_SUMMARYresults.png)
+![](results/egypt_SUMMARY.png)
 
 ### Irleand
-![](results/ireland_SUMMARYresults.png)
+![](results/irleand_SUMMARY.png)
 
 ### Oman
-![](results/oman_SUMMARYresults.png)
+![](results/oman_SUMMARY.png)
 
 ### Tanzania
-![](results/tanzania_SUMMARYresults.png)
+![](results/tanzania_SUMMARY.png)
 
 **Wniosek:**  
 Przeprowadzenie rozwiązania MST daje bardzo szybko bardzo dobrą podstawę do przeprowadzenia algorytmu Local Search.
