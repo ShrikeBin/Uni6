@@ -1,0 +1,72 @@
+@startuml "System Kasy Samoobsługowej"
+
+skinparam backgroundBackgroundColor #FFFFFF
+skinparam usecase {
+    BackgroundColor #F1F8FF
+    BorderColor #0052CC
+    ArrowColor #0052CC
+    ActorBorderColor #0052CC
+}
+skinparam actor {
+    BackgroundColor #F1F8FF
+    BorderColor #0052CC
+}
+skinparam sequence {
+    ArrowColor #0052CC
+}
+
+left to right direction
+
+actor "Klient" as K
+actor "Pracownik nadzoru" as P
+actor "Administrator" as A
+actor "Terminal płatniczy" as T <<External>>
+actor "Baza produktów" as B <<External>>
+
+rectangle "System Kasy Samoobsługowej" {
+    (PU-01: Skanowanie produktu) as PU01
+    (PU-02: Płatność) as PU02
+    (PU-03: Weryfikacja wagi) as PU03
+    (PU-04: Interwencja pracownika) as PU04
+    (PU-05: Weryfikacja wieku) as PU05
+    (PU-06: Usunięcie produktu) as PU06
+    (PU-07: Wyświetlenie koszyka) as PU07
+    (PU-08: Anulowanie transakcji) as PU08
+    (PU-09: Aplikacja lojalnościowa) as PU09
+    
+    (PU-10: Konfiguracja systemu) as PU10
+    (PU-11: Aktualizacja oprogramowania) as PU11
+    (PU-12: Kopia zapasowa) as PU12
+    (PU-13: Diagnostyka) as PU13
+
+    K -- PU01
+    K -- PU02
+    K -- PU06
+    K -- PU08
+    K -- PU09
+
+    P -- PU04
+    P -- PU05
+    P -- PU08
+
+    A -- PU10
+    
+    PU01 -- B
+    PU02 -- T
+
+    PU01 ..> PU03 : <<include>>
+    PU02 ..> PU03 : <<include>>
+    PU06 ..> PU03 : <<include>>
+    PU10 ..> PU11 : <<include>>
+    PU10 ..> PU12 : <<include>>
+    PU10 ..> PU13 : <<include>>
+    PU05 ..> PU04 : <<include>>
+
+    PU01 <.. PU05 : <<extend>>
+    PU02 <.. PU09 : <<extend>>
+    PU03 <.. PU04 : <<extend>>
+    PU06 <.. PU04 : <<extend>>
+    PU04 <.. PU08 : <<extend>>
+}
+
+@enduml
