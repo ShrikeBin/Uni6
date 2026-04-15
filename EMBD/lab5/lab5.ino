@@ -108,9 +108,10 @@ void wheel_fun(){
 
 
 unsigned volatile int BLOCK_SONAR = 0;
+
 void movement_fun(){
   // Maybe adjust for the serwo drift
-  if(DISTANCE_SONAR < 20)
+  if(DISTANCE_SONAR < 30)
   {
     BLOCK_SONAR = 1;
     MOVEMENT_TYPE = 0;
@@ -119,21 +120,24 @@ void movement_fun(){
     w.stop();
 
     serwo.write(135);
-    int left = getDistance();
+    int left1 = getDistance();
     delay(300);
+
     serwo.write(45);
-    int right = getDistance();
+    int right2 = getDistance();
     delay(300);
+
     serwo.write(135);
-    left = getDistance();
+    int left2 = getDistance();
     delay(300);
+
     serwo.write(45);
-    right = getDistance();
-    
+    int right2 = getDistance();
     delay(300);
+
     serwo.write(90);
 
-    if(left > right){
+    if(((left1 + left2) / 2) > (((right1 + right2) / 2))){
       w.rotateLeft();
       delay(500);
       w.stop();
