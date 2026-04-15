@@ -164,7 +164,6 @@ void led_fun(){
     }
 }
 
-
 void increment() {
   if(digitalRead(INTINPUT0))
     cnt0++;
