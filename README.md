@@ -2,5 +2,5 @@
 
 - MH - Metaheuristics
 - JPP - Programming Languages and Paradigms
-- ALGEB - Algebra/ Miscellaneous
+- ALG - Algebra/ Miscellaneous
 - EMBD - Embedded Systems
