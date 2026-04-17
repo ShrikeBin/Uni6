@@ -1,36 +1,37 @@
 -- ring.adb
 -- Generic Ring modulo N — package body
-
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_IO;
 
 package body Ring is
 
-   function Normalize (X : Integer) return Integer is
-      R : Integer := X mod N;
+   -- ── helpers ────────────────────────────────────────────────────────────────
+
+   function Normalize (V : Integer) return Integer is
+      R : Integer := V mod N;
    begin
       if R < 0 then R := R + N; end if;
       return R;
    end Normalize;
 
-   procedure Extended_GCD
-     (A, B : in  Integer;
-      GCD  : out Integer;
-      S    : out Integer)
-   is
+   -- Extended Euclidean: returns gcd, sets S so that A*S ≡ gcd (mod N)
+   procedure Extended_GCD (A, B  :     Integer;
+                            G, S  : out Integer) is
       Old_R : Integer := A;
       R     : Integer := B;
       Old_S : Integer := 1;
-      SS    : Integer := 0;
-      Q, T  : Integer;
+      Ss    : Integer := 0;
+      Q, Tmp : Integer;
    begin
       while R /= 0 loop
          Q     := Old_R / R;
-         T     := R;     R     := Old_R - Q * R;  Old_R := T;
-         T     := SS;    SS    := Old_S - Q * SS; Old_S := T;
+         Tmp   := R;   R   := Old_R - Q * R;   Old_R := Tmp;
+         Tmp   := Ss;  Ss  := Old_S - Q * Ss;  Old_S := Tmp;
       end loop;
-      GCD := Old_R;
-      S   := Old_S;
+      G := Old_R;
+      S := Old_S;
    end Extended_GCD;
+
+   -- ── Conversion ─────────────────────────────────────────────────────────────
 
    function To_Element (Value : Integer) return Element is
    begin
@@ -41,6 +42,8 @@ package body Ring is
    begin
       return E.Value;
    end To_Integer;
+
+   -- ── Arithmetic ─────────────────────────────────────────────────────────────
 
    function "+" (Left, Right : Element) return Element is
    begin
@@ -62,19 +65,25 @@ package body Ring is
       return (Value => Normalize (Left.Value * Right.Value));
    end "*";
 
+   function "/" (Left, Right : Element) return Element is
+   begin
+      if Right.Value = 0 then
+         raise Division_By_Zero;
+      end if;
+      return Left * Inverse (Right);
+   end "/";
+
+   -- ── Modular inverse ────────────────────────────────────────────────────────
+
    function Inverse (E : Element) return Element is
       G, S : Integer;
    begin
       if E.Value = 0 then
-         raise Division_By_Zero with
-           "Cannot compute inverse of zero in ring mod" & N'Image;
+         raise No_Inverse;
       end if;
       Extended_GCD (E.Value, N, G, S);
       if G /= 1 then
-         raise No_Inverse with
-           "Element" & E.Value'Image &
-           " has no inverse in ring mod" & N'Image &
-           " (gcd =" & G'Image & ")";
+         raise No_Inverse;
       end if;
       return (Value => Normalize (S));
    end Inverse;
@@ -87,47 +96,31 @@ package body Ring is
       return G = 1;
    end Has_Inverse;
 
-   function "/" (Left, Right : Element) return Element is
-   begin
-      if Right.Value = 0 then
-         raise Division_By_Zero with "Division by zero in ring mod" & N'Image;
-      end if;
-      return Left * Inverse (Right);
-   end "/";
+   -- ── Comparisons ────────────────────────────────────────────────────────────
 
-   function "=" (Left, Right : Element) return Boolean is
-   begin
-      return Left.Value = Right.Value;
-   end "=";
+   function "="  (Left, Right : Element) return Boolean is
+   begin return Left.Value =  Right.Value; end "=";
 
-   function "<" (Left, Right : Element) return Boolean is
-   begin
-      return Left.Value < Right.Value;
-   end "<";
+   function "<"  (Left, Right : Element) return Boolean is
+   begin return Left.Value <  Right.Value; end "<";
 
    function "<=" (Left, Right : Element) return Boolean is
-   begin
-      return Left.Value <= Right.Value;
-   end "<=";
+   begin return Left.Value <= Right.Value; end "<=";
 
-   function ">" (Left, Right : Element) return Boolean is
-   begin
-      return Left.Value > Right.Value;
-   end ">";
+   function ">"  (Left, Right : Element) return Boolean is
+   begin return Left.Value >  Right.Value; end ">";
 
    function ">=" (Left, Right : Element) return Boolean is
-   begin
-      return Left.Value >= Right.Value;
-   end ">=";
+   begin return Left.Value >= Right.Value; end ">=";
+
+   -- ── Utility ────────────────────────────────────────────────────────────────
 
    function Modulus return Positive is
-   begin
-      return N;
-   end Modulus;
+   begin return N; end Modulus;
 
    procedure Put (E : Element) is
    begin
-      Ada.Text_IO.Put (E.Value'Image & " [mod" & N'Image & "]");
+      Ada.Text_IO.Put (Integer'Image (E.Value) & " [mod" & Integer'Image (N) & "]");
    end Put;
 
    procedure Put_Line (E : Element) is
