@@ -12,7 +12,6 @@ procedure Test is
    -- ── DH: field of characteristic 1234567891 ────────────────────────────────
    package DH is new DH_Pkg (P => 1234567891);
 
-   -- Helper: print a check mark
    procedure Check (Got, Expected : Natural; Label : String) is
    begin
       Put ("  " & Label & " = ");
@@ -120,7 +119,7 @@ begin
          Dummy   : DH.Element;
       begin
          Dummy := DH.Encrypt (Charlie, 42);
-         Put_Line ("  ✗ Exception NOT raised — bug!");
+         Put_Line ("  ✗ Exception NOT raised!");
          pragma Unreferenced (Dummy);
       exception
          when DH.Key_Not_Set =>

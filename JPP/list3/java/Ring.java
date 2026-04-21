@@ -1,5 +1,3 @@
-// Ring.java — Modular arithmetic ring Z/nZ
-
 public class Ring {
     private final long n;
     private final long value;
@@ -9,14 +7,11 @@ public class Ring {
         this.value = normalize(value, n);
     }
 
-    // ── Static factory ─────────────────────────────────────────────────────────
     public static Ring of(long n, long value) { return new Ring(n, value); }
 
-    // ── Getters ────────────────────────────────────────────────────────────────
     public long getN()     { return n; }
     public long getValue() { return value; }
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
     private static long normalize(long v, long n) {
         return ((v % n) + n) % n;
     }
@@ -56,7 +51,6 @@ public class Ring {
         return extGcd(value, n)[0] == 1;
     }
 
-    // ── Comparisons ────────────────────────────────────────────────────────────
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Ring)) return false;
@@ -66,7 +60,6 @@ public class Ring {
 
     @Override public int hashCode() { return Long.hashCode(value) * 31 + Long.hashCode(n); }
 
-    // ── Utility ────────────────────────────────────────────────────────────────
     @Override
     public String toString() { return value + " [mod " + n + "]"; }
 

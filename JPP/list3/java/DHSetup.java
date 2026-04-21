@@ -1,9 +1,7 @@
-// DHSetup.java — Diffie-Hellman setup: random generator + fast power
-
 import java.util.Random;
 
 public class DHSetup {
-    private final long p;         // prime field characteristic
+    private final long p;
     private final long generator;
 
     public DHSetup(long p) {
@@ -17,7 +15,6 @@ public class DHSetup {
 
     public Ring getGenerator() { return Ring.of(p, generator); }
 
-    /** a^b using O(log b) multiplications */
     public Ring power(Ring a, long b) {
         Ring result = Ring.of(p, 1);
         Ring base   = a;

@@ -4,8 +4,6 @@ with Ada.Text_IO;
 
 package body Ring is
 
-   -- ── helpers ────────────────────────────────────────────────────────────────
-
    function Normalize (V : Integer) return Integer is
       R : Integer := V mod N;
    begin
@@ -13,7 +11,6 @@ package body Ring is
       return R;
    end Normalize;
 
-   -- Extended Euclidean: returns gcd, sets S so that A*S ≡ gcd (mod N)
    procedure Extended_GCD (A, B  :     Integer;
                             G, S  : out Integer) is
       Old_R : Integer := A;
@@ -31,8 +28,6 @@ package body Ring is
       S := Old_S;
    end Extended_GCD;
 
-   -- ── Conversion ─────────────────────────────────────────────────────────────
-
    function To_Element (Value : Integer) return Element is
    begin
       return (Value => Normalize (Value));
@@ -42,8 +37,6 @@ package body Ring is
    begin
       return E.Value;
    end To_Integer;
-
-   -- ── Arithmetic ─────────────────────────────────────────────────────────────
 
    function "+" (Left, Right : Element) return Element is
    begin
@@ -73,8 +66,6 @@ package body Ring is
       return Left * Inverse (Right);
    end "/";
 
-   -- ── Modular inverse ────────────────────────────────────────────────────────
-
    function Inverse (E : Element) return Element is
       G, S : Integer;
    begin
@@ -96,8 +87,6 @@ package body Ring is
       return G = 1;
    end Has_Inverse;
 
-   -- ── Comparisons ────────────────────────────────────────────────────────────
-
    function "="  (Left, Right : Element) return Boolean is
    begin return Left.Value =  Right.Value; end "=";
 
@@ -112,8 +101,6 @@ package body Ring is
 
    function ">=" (Left, Right : Element) return Boolean is
    begin return Left.Value >= Right.Value; end ">=";
-
-   -- ── Utility ────────────────────────────────────────────────────────────────
 
    function Modulus return Positive is
    begin return N; end Modulus;

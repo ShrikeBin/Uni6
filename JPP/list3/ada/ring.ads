@@ -1,6 +1,3 @@
--- ring.ads
--- Generic Ring modulo N — package specification
-
 generic
    N : Positive;
 package Ring is

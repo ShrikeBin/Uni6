@@ -55,7 +55,6 @@ public:
     T decrypt(T c) const {
         if (!shared_key_) throw std::logic_error("DH: Key not set");
         
-        // Find modular inverse of shared_key_ mod P
         long long x;
         long long g = ext_gcd(shared_key_->to_int(), setup_.getFieldSize(), x);
         if (g != 1) throw std::runtime_error("DH: Key has no inverse");

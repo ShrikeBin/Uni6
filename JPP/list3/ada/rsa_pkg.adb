@@ -1,16 +1,11 @@
--- rsa.adb
 with Ada.Numerics.Discrete_Random;
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body RSA_Pkg is
 
-   -- ── Internal key storage ──────────────────────────────────────────────────
    Public_Key  : Positive := 3;
    Private_Key : Positive := 3;
 
-   -- ── Arithmetic helpers ────────────────────────────────────────────────────
-
-   -- Extended GCD: returns gcd(A, B), sets X s.t. A*X ≡ gcd (mod B)
    procedure Extended_GCD (A, B :     Long_Long_Integer;
                             G    : out Long_Long_Integer;
                             X    : out Long_Long_Integer) is
@@ -43,7 +38,6 @@ package body RSA_Pkg is
       return R;
    end Normalize;
 
-   -- Fast modular exponentiation: Base^Exp mod Modulus
    function Fast_Pow (Base, Exp, Modulus : Long_Long_Integer)
                       return Long_Long_Integer is
       B : Long_Long_Integer := Base mod Modulus;
@@ -59,8 +53,6 @@ package body RSA_Pkg is
       end loop;
       return R;
    end Fast_Pow;
-
-   -- ── Init ──────────────────────────────────────────────────────────────────
 
    procedure Init is
       subtype E_Range is Positive range 2 .. Phi - 1;
@@ -83,8 +75,6 @@ package body RSA_Pkg is
       Public_Key  := Positive (E);
       Private_Key := Positive (D);
    end Init;
-
-   -- ── Public interface ──────────────────────────────────────────────────────
 
    function Get_Modulo return Positive is
    begin return N; end Get_Modulo;

@@ -77,7 +77,7 @@ public class TestMain {
         try {
             User charlie = new User(setup);
             charlie.encrypt(Ring.of(p, 42));
-            System.out.println("  ✗ Exception NOT raised — bug!");
+            System.out.println("  ✗ Exception NOT raised!");
         } catch (IllegalStateException e) {
             System.out.println("  ✓ Caught expected exception: " + e.getMessage());
         }

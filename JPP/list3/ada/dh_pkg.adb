@@ -1,11 +1,8 @@
--- diffie_hellman.adb
 with Ada.Numerics.Discrete_Random;
 
 package body DH_Pkg is
 
    Generator_Val : Long_Long_Integer := 2;
-
-   -- ── Helpers ────────────────────────────────────────────────────────────────
 
    procedure Extended_GCD (A, B :     Long_Long_Integer;
                             G    : out Long_Long_Integer;
@@ -54,8 +51,6 @@ package body DH_Pkg is
       return R;
    end Fast_Pow;
 
-   -- ── DHSetup ────────────────────────────────────────────────────────────────
-
    procedure DH_Init is
       subtype G_Range is Positive range 2 .. P - 2;
       package Rand_G is new Ada.Numerics.Discrete_Random (G_Range);
@@ -73,8 +68,6 @@ package body DH_Pkg is
       return Element (Fast_Pow (Long_Long_Integer (A), B,
                                 Long_Long_Integer (P)));
    end Field_Power;
-
-   -- ── User ──────────────────────────────────────────────────────────────────
 
    function Make_User return User is
       subtype S_Range is Positive range 2 .. P - 2;

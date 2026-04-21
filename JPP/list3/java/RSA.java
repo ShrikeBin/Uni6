@@ -1,12 +1,9 @@
-// RSA.java — RSA encryption/decryption over Ring<n>
-
 import java.util.Random;
 
 public class RSA {
-    private final long n;          // p * q
-    private final long publicKey;  // e
-    private final long privateKey; // d  (kept private)
-
+    private final long n;
+    private final long publicKey;
+    private final long privateKey;
     public RSA(long p, long q) {
         this.n = p * q;
         long phi = (p - 1) * (q - 1);
@@ -21,24 +18,18 @@ public class RSA {
         this.privateKey = modInverse(e, phi);
     }
 
-    // ── Public interface ──────────────────────────────────────────────────────
 
     public long getModulo()     { return n; }
     public long getPublicKey()  { return publicKey; }
 
-    /** Encrypt m using the public key: c = m^e mod n  (O(log e) multiplications) */
     public Ring encrypt(Ring m) {
         return fastPow(m, publicKey, Ring.of(n, 1));
     }
 
-    /** Decrypt s using the private key: m = s^d mod n  (O(log d) multiplications) */
     public Ring decrypt(Ring s) {
         return fastPow(s, privateKey, Ring.of(n, 1));
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /** Binary exponentiation: base^exp using O(log exp) multiplications */
     public static Ring fastPow(Ring base, long exp, Ring identity) {
         Ring result = identity;
         while (exp > 0) {
