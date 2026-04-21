@@ -25,7 +25,7 @@ Servo serwo;
 
 volatile int cnt0;
 volatile int cnt1;
-volatile int RECEIVE_REPEAT = 0;
+volatile int RECEIVING_REPEAT = 0;
 
 void setup() {
   // RF, RB, RS
@@ -36,8 +36,8 @@ void setup() {
   pinMode(INTINPUT0, INPUT);
   pinMode(INTINPUT1, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(TRIG, OUTPUT);    // TRIG startuje sonar
-  pinMode(ECHO, INPUT);     // ECHO odbiera powracający impuls
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
 
   cnt0=0;
   cnt1=0;
@@ -84,7 +84,7 @@ void loop()
 
 void ir_fun() {
   if (millis() - lastRepeatRead > MOVEMENT_READ_COOLDOWN) {
-    RECEIVE_REPEAT = 0;
+    RECEIVING_REPEAT = 0;
   }
   if (IrReceiver.decode()) {
     uint32_t code = IrReceiver.decodedIRData.decodedRawData;
@@ -111,7 +111,7 @@ void ir_fun() {
         break;
 
       case 0x0: // REPEAT
-        RECEIVE_REPEAT = 1;
+        RECEIVING_REPEAT = 1;
         lastRepeatRead = millis();
         break;
 
@@ -141,11 +141,8 @@ void lcd_fun(){
       lcd.print((cnt1 + cnt0 )/ 2);
       lcd.print(" ");
       lcd.print(decodeIR(lastCode));
-      lcd.print(RECEIVE_REPEAT);
-      if(RECEIVE_REPEAT == 0)
-      {
-        MOVEMENT_TYPE = 0;
-      }
+      lcd.print(" ")
+      lcd.print(RECEIVING_REPEAT);
       lcd.setCursor(0,1);
       if(MOVEMENT_TYPE == 0){
         lcd.print("[X] ");
@@ -186,6 +183,10 @@ void wheel_fun(){
 unsigned volatile int BLOCK_SONAR = 0;
 
 void movement_fun(){
+  if(RECEIVING_REPEAT == 0)
+  {
+    MOVEMENT_TYPE = 0;
+  }
   // Maybe adjust for the serwo drift
   if(DISTANCE_SONAR < 30)
   {
