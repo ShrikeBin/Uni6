@@ -12,9 +12,11 @@
 #define SERVO 3
 #define IR_PIN 2
 
-uint32_t lastCode = 0;
+uint32_t lastCode = 0xE31CFF00;
 unsigned long lastIRReadTime = 0;
+unsigned long lastRepeatRead = 0;
 const unsigned long IR_READ_COOLDOWN = 300; // milliseconds
+const unsigned long MOVEMENT_READ_COOLDOWN = 200; // milliseconds
 
 byte LCDAddress = 0x27;
 LiquidCrystal_I2C lcd(LCDAddress, 16, 2);
@@ -23,11 +25,12 @@ Servo serwo;
 
 volatile int cnt0;
 volatile int cnt1;
+volatile int RECEIVE_REPEAT = 0;
 
 void setup() {
   // RF, RB, RS
   // LF, LB, LS
-  
+      
   w.attach(9,10,5,11,12,6);
 
   pinMode(INTINPUT0, INPUT);
@@ -61,7 +64,7 @@ unsigned long GLOBAL_T = 0;
 unsigned long DISTANCE = 0;
 unsigned long DISTANCE_SONAR = 1000;
 volatile char IS_DONE = 0;
-volatile char MOVEMENT_TYPE = 1; // 0 - stop, 1 - forward, 2 - backward
+volatile char MOVEMENT_TYPE = 0; // 0 - stop, 1 - forward, 2 - backward, 3 - left, 4 - right
 
 Ticker WHEELS = Ticker(50, *wheel_fun);
 Ticker LCD = Ticker(PERIOD_LCD, *lcd_fun);
@@ -80,9 +83,41 @@ void loop()
 }
 
 void ir_fun() {
+  if (millis() - lastRepeatRead > MOVEMENT_READ_COOLDOWN) {
+    RECEIVE_REPEAT = 0;
+  }
   if (IrReceiver.decode()) {
-
     uint32_t code = IrReceiver.decodedIRData.decodedRawData;
+
+      switch(code) {
+      case 0xE718FF00: // UP
+        MOVEMENT_TYPE = 1;
+        break;
+
+      case 0xAD52FF00: // DOWN
+        MOVEMENT_TYPE = 2;
+        break;
+
+      case 0xE31CFF00: // OK
+        MOVEMENT_TYPE = 0;
+        break;
+
+      case 0xF708FF00: // LEFT
+        MOVEMENT_TYPE = 3;
+        break;
+
+      case 0xA55AFF00: // RIGHT
+        MOVEMENT_TYPE = 4;
+        break;
+
+      case 0x0: // REPEAT
+        RECEIVE_REPEAT = 1;
+        lastRepeatRead = millis();
+        break;
+
+      default:
+        break;
+    }
 
     if (millis() - lastIRReadTime < IR_READ_COOLDOWN) {
       IrReceiver.resume();
@@ -90,19 +125,9 @@ void ir_fun() {
     }
 
     lastIRReadTime = millis();
-
-    switch(code) {
-      case 0xFFA25D:
-        MOVEMENT_TYPE = 1; // forward
-        break;
-
-      case 0xFF629D:
-        MOVEMENT_TYPE = 2; // backward
-        break;
-
-      case 0xFFE21D:
-        MOVEMENT_TYPE = 0; // stop
-        break;
+    if(code != 0x0)
+    {
+      lastCode = code;
     }
 
     IrReceiver.resume();
@@ -114,6 +139,13 @@ void lcd_fun(){
       lcd.setCursor(0,0);
       lcd.print("[D] ");
       lcd.print((cnt1 + cnt0 )/ 2);
+      lcd.print(" ");
+      lcd.print(decodeIR(lastCode));
+      lcd.print(RECEIVE_REPEAT);
+      if(RECEIVE_REPEAT == 0)
+      {
+        MOVEMENT_TYPE = 0;
+      }
       lcd.setCursor(0,1);
       if(MOVEMENT_TYPE == 0){
         lcd.print("[X] ");
@@ -142,6 +174,12 @@ void wheel_fun(){
       w.back();
       DISTANCE = DISTANCE + 1; 
     }
+    else if(MOVEMENT_TYPE == 3){
+      w.rotateRight();
+    }
+    else if(MOVEMENT_TYPE == 4){
+      w.rotateLeft();
+    }
 }
 
 
@@ -154,7 +192,7 @@ void movement_fun(){
     BLOCK_SONAR = 1;
     MOVEMENT_TYPE = 0;
     w.back();
-    delay(400);
+    delay(500);
     w.stop();
 
     serwo.write(135);
@@ -162,7 +200,7 @@ void movement_fun(){
     delay(300);
 
     serwo.write(45);
-    int right2 = getDistance();
+    int right1 = getDistance();
     delay(300);
 
     serwo.write(135);
@@ -187,7 +225,7 @@ void movement_fun(){
 
     
     BLOCK_SONAR = 0;
-    MOVEMENT_TYPE = 1;
+    MOVEMENT_TYPE = 0;
   }
 }
 
@@ -233,5 +271,52 @@ void sonar_fun() {
   { 
     serwo.write(90);
     DISTANCE_SONAR = getDistance();
+  }
+}
+
+const char* decodeIR(uint32_t code) {
+
+  // Code: 0xBA45FF00 // 1
+  // Code: 0xB946FF00 // 2
+  // Code: 0xB847FF00 // 3
+  // Code: 0xBB44FF00 // 4
+  // Code: 0xBF40FF00 // 5
+  // Code: 0xBC43FF00 // 6
+  // Code: 0xF807FF00 // 7
+  // Code: 0xEA15FF00 // 8
+  // Code: 0xF609FF00 // 9
+  // Code: 0xE916FF00 // *
+  // Code: 0xE619FF00 // 0
+  // Code: 0xF20DFF00 // #
+  // Code: 0xE718FF00 // UP
+  // Code: 0xF708FF00 // LEFT
+  // Code: 0xE31CFF00 // OK
+  // Code: 0xA55AFF00 // RIGHT
+  // Code: 0xAD52FF00 // DOWN
+
+  switch(code) {
+    case 0xBA45FF00: return "1";
+    case 0xB946FF00: return "2";
+    case 0xB847FF00: return "3";
+    case 0xBB44FF00: return "4";
+    case 0xBF40FF00: return "5";
+    case 0xBC43FF00: return "6";
+    case 0xF807FF00: return "7";
+    case 0xEA15FF00: return "8";
+    case 0xF609FF00: return "9";
+    case 0xE619FF00: return "0";
+
+    case 0xE916FF00: return "*";
+    case 0xF20DFF00: return "#";
+
+    case 0xE718FF00: return "UP";
+    case 0xAD52FF00: return "DOWN";
+    case 0xF708FF00: return "LEFT";
+    case 0xA55AFF00: return "RIGHT";
+    case 0xE31CFF00: return "OK";
+
+    case 0x0: return "REPEAT";
+
+    default: return "UNKNOWN";
   }
 }
