@@ -1,12 +1,31 @@
 ---
-title: "Sprawozdanie – Laboratoria 1, 2, 3"
-author: ""
+title: "Sprawozdanie – 1"
+author: "Jan Ryszkiewicz"
 format:
-  html:
-    toc: true
-    toc-depth: 3
-    code-fold: true
-    self-contained: true
+  pdf:
+    toc: false
+    geometry:
+      - top=15mm
+      - bottom=15mm
+      - left=12mm
+      - right=12mm
+    include-in-header:
+      text: |
+        \setlength{\parindent}{0pt}
+        \setlength{\parskip}{4pt}
+        
+        \usepackage{etoolbox}
+        \makeatletter
+        \patchcmd{\section}{\listparindent}{\z@}{}{}
+        \renewcommand{\section}{\@startsection{section}{1}{\z@}%
+          {-2ex \@plus -1ex \@minus -.2ex}%
+          {0.5ex \@plus .2ex}%
+          {\normalfont\Large\bfseries}}
+        \renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+          {-1.5ex\@plus -1ex \@minus -.2ex}%
+          {0.3ex \@plus .2ex}%
+          {\normalfont\large\bfseries}}
+        \makeatother
 execute:
   echo: true
   warning: false
@@ -16,26 +35,17 @@ jupyter: python3
 ## Zmienne zgodnie z nr indeksu 282210
 
 ```{python}
-a = 2
-b = 8
-c = 2
-d = 2
-e = 1
-f = 0
+A = 2; B = 8; C = 2; D = 2; E = 1; F = 0
 ```
 
 ---
 
 # Zad 1 – Pierścień liczb Gaussa $\mathbb{Z}[i]$
 
-## Reprezentacja liczb Gaussa
-
 Liczba Gaussa to liczba zespolona postaci $z = p + qi$, gdzie $p, q \in \mathbb{Z}$.
-Reprezentowana jest jako obiekt klasy `GaussianInt` z dwoma polami całkowitoliczbowymi:
-`re` (część rzeczywista) i `im` (część urojona). Dodawanie i mnożenie odpowiadają
+Reprezentowana jest jako obiekt klasy `GaussianInt` z dwoma polami całkowitymi:
+`re` i `im`. Dodawanie i mnożenie odpowiadają
 standardowym działaniom na liczbach zespolonych z wynikami w $\mathbb{Z}$.
-
-### Implementacja:
 
 ```{python}
 class GaussianInt:
@@ -52,8 +62,13 @@ class GaussianInt:
     def __mul__(self, other):
         return GaussianInt(
             self.re * other.re - self.im * other.im,
-            self.re * other.im + self.im * other.re
-        )
+            self.re * other.im + self.im * other.re)
+
+    def __eq__(self, other):
+        return self.re == other.re and self.im == other.im
+
+    def __str__(self):
+        return f"{self.re} {"-" if self.im < 0 else "+"} {abs(self.im)}i"
 
     def conjugate(self):
         return GaussianInt(self.re, -self.im)
@@ -62,34 +77,23 @@ class GaussianInt:
         """Norma: N(p+qi) = p^2 + q^2"""
         return self.re**2 + self.im**2
 
-    def __eq__(self, other):
-        return self.re == other.re and self.im == other.im
-
-    def __hash__(self):
-        return hash((self.re, self.im))
-
-    def __repr__(self):
-        sign = "+" if self.im >= 0 else "-"
-        return f"({self.re} {sign} {abs(self.im)}i)"
-
     @staticmethod
-    def divide(z, w):
+    def divide(a, b):
         """
         Dzielenie z resztą: z = w*q + r, N(r) < N(w).
         Obliczamy z*conj(w) / N(w) w Q[i], zaokrąglamy obie
         składowe do najbliższej liczby całkowitej – błąd zaokrąglenia
         wynosi co najwyżej 1/2 w każdej składowej, więc N(r) <= N(w)/2.
         """
-        den = w.norm()
-        if den == 0:
-            raise ZeroDivisionError("Dzielnik nie może być zerem")
-        num = z * w.conjugate()
-        q_re = round(num.re / den)
-        q_im = round(num.im / den)
+        div = b.norm()
+        if div == 0:
+            raise ZeroDivisionError()
+        num = a * b.conjugate()
+        q_re = round(num.re / div)
+        q_im = round(num.im / div)
         q = GaussianInt(q_re, q_im)
-        r = z - (w * q)
+        r = a - (b * q)
         return q, r
-
 
 def gcd_gauss(a, b):
     """NWD algorytmem Euklidesa dla liczb Gaussa."""
@@ -135,49 +139,18 @@ def lcm_list(nums):
 units = [GaussianInt(1,0), GaussianInt(-1,0), GaussianInt(0,1), GaussianInt(0,-1)]
 ```
 
-## Opis kluczowych funkcji
 
-**Norma:** $N(p+qi) = p^2 + q^2 \in \mathbb{N}_0$. Jest multiplikatywna: $N(zw) = N(z)N(w)$.
-
-**Dzielenie z resztą:** Dla $z, w \in \mathbb{Z}[i]$, $w \neq 0$, szukamy $q, r$ takich że
-$z = wq + r$ i $N(r) < N(w)$.
-Obliczamy $\frac{z\cdot\overline{w}}{N(w)} \in \mathbb{Q}[i]$ i zaokrąglamy obie składowe
-do najbliższej liczby całkowitej. Błąd zaokrąglenia jest co najwyżej $\frac{1}{2}$
-w każdej współrzędnej, więc $N(r) \leq \frac{1}{4}N(w) + \frac{1}{4}N(w) = \frac{1}{2}N(w) < N(w)$.
-
-**NWD:** Algorytm Euklidesa – iteracyjnie $(a,b) \leftarrow (b, a \bmod b)$ aż $b=0$.
-NWD wyznaczony jest z dokładnością do mnożenia przez jednostkę (asocjat).
-
-**NWW:** $\operatorname{NWW}(a,b) = \frac{a}{\operatorname{NWD}(a,b)} \cdot b$.
-
-### Fragment kodu – dzielenie z resztą i NWD
+1b) – Norma $N(a+bi)$ i dzielenie $(c+ai)(d+bi)$ przez $e+fi$
 
 ```{python}
-# --- Dzielenie z resztą ---
-z_ex = GaussianInt(7, 3)
-w_ex = GaussianInt(2, 1)
-q_ex, r_ex = GaussianInt.divide(z_ex, w_ex)
-print(f"Dzielenie: {z_ex} / {w_ex} = {q_ex}, reszta = {r_ex}")
-print(f"Sprawdzenie: {w_ex}*{q_ex} + {r_ex} = {w_ex*q_ex + r_ex}")
-print()
-
-# --- NWD ---
-x_ex = GaussianInt(3, 4)
-y_ex = GaussianInt(1, 2)
-print(f"NWD({x_ex}, {y_ex}) = {gcd_gauss(x_ex, y_ex)}")
-```
-
-## Zadanie 1b – Norma $N(a+bi)$ i dzielenie $(c+ai)(d+bi)$ przez $e+fi$
-
-```{python}
-N_z = GaussianInt(a, b)
-print(f"N({a}+{b}i) = N{N_z} = {N_z.norm()}")
+N_z = GaussianInt(A, B)
+print(f"N({A}+{B}i) = N{N_z} = {N_z.norm()}")
 print()
 
 # Licznik: (c+ai)(d+bi)
-numerator = GaussianInt(c, a) * GaussianInt(d, b)
-divisor   = GaussianInt(e, f)
-print(f"Licznik: ({c}+{a}i)*({d}+{b}i) = {numerator}")
+numerator = GaussianInt(C, A) * GaussianInt(D, B)
+divisor   = GaussianInt(E, F)
+print(f"Licznik: ({C}+{A}i)*({D}+{B}i) = {numerator}")
 print(f"Dzielnik: {divisor}  (norma = {divisor.norm()})")
 ```
 
@@ -205,12 +178,12 @@ W $\mathbb{Z}[i]$ NWD i iloraz są wyznaczone z dokładnością do mnożenia prz
 Grupa jednostek $\mathbb{Z}[i]^* = \{1, -1, i, -i\}$ ma dokładnie **4 elementy**
 (są to jedyne liczby Gaussa o normie 1), dlatego możliwych wyników jest dokładnie 4.
 
-## Zadanie 1c – NWD i NWW dla trójki liczb Gaussa
+1c) – NWD i NWW dla trójki liczb Gaussa
 
 ```{python}
-z1 = GaussianInt(a, b)   # a+bi
-z2 = GaussianInt(c, d)   # c+di
-z3 = GaussianInt(e, d)   # e+di  (zgodnie z treścią: e+di)
+z1 = GaussianInt(A, B)   # a+bi
+z2 = GaussianInt(C, D)   # c+di
+z3 = GaussianInt(E, D)   # e+di  (zgodnie z treścią: e+di)
 
 print(f"z1 = {z1},  z2 = {z2},  z3 = {z3}")
 print()
@@ -387,7 +360,7 @@ kroku Euklidesa. Wynik: $s \cdot a + t \cdot b = \operatorname{NWD}(a,b)$.
 
 ```{python}
 # cx^a + b  =  2x^2 + 8
-p_poly = Polynomial({a: c, 0: b})
+p_poly = Polynomial({A: C, 0: B})
 div_poly = Polynomial({1: 1, 0: -1})   # x - 1
 
 print(f"p(x)         = {p_poly}")
@@ -407,9 +380,9 @@ print(f"Sprawdzenie (tw. Bézouta): p(1) = {val_at_1:.6g}  (= reszta ✓)")
 
 ```{python}
 # v(x) = ax^3 + bx^2 + cx + d = 2x^3 + 8x^2 + 2x + 2
-v_poly = Polynomial({3: a, 2: b, 1: c, 0: d})
+v_poly = Polynomial({3: A, 2: B, 1: C, 0: D})
 # w(x) = dx^3 + ex^2 + fx     = 2x^3 + x^2 + 0x
-w_poly = Polynomial({3: d, 2: e, 1: f})
+w_poly = Polynomial({3: D, 2: E, 1: F})
 
 print(f"v(x) = {v_poly}")
 print(f"w(x) = {w_poly}")
@@ -491,8 +464,8 @@ def find_minimal_elements(points):
 ## Zadanie 3a – Porównanie par w $\mathbb{N}^2$
 
 ```{python}
-pairs_2d = [(a, b), (c, d), (e, f)]
-labels_2d = [f"({a},{b})", f"({c},{d})", f"({e},{f})"]
+pairs_2d = [(A, B), (C, D), (E, F)]
+labels_2d = [f"({A},{B})", f"({C},{D})", f"({E},{F})"]
 
 print("Porównania par (porządek produktowy na N^2):\n")
 for i in range(len(pairs_2d)):
@@ -505,8 +478,8 @@ for i in range(len(pairs_2d)):
 ## Zadanie 3b – Porównanie trójek w $\mathbb{N}^3$
 
 ```{python}
-triples_3d = [(a, c, e), (b, d, f)]
-labels_3d  = [f"({a},{c},{e})", f"({b},{d},{f})"]
+triples_3d = [(A, C, E), (B, D, F)]
+labels_3d  = [f"({A},{C},{E})", f"({B},{D},{F})"]
 
 print("Porównanie trójek (porządek produktowy na N^3):\n")
 rel = compare(triples_3d[0], triples_3d[1])
@@ -526,7 +499,7 @@ def get_set_A(a, b):
                 points.append((x, y))
     return points
 
-A_all = get_set_A(a, b)
+A_all = get_set_A(A, B)
 A_min = find_minimal_elements(A_all)
 
 print(f"Wszystkie punkty A ({len(A_all)} elementów):")
@@ -551,7 +524,7 @@ def get_set_B(c, d, e, f):
     return points
 
 print("Wyznaczanie elementów minimalnych zbioru B (może chwilę potrwać)...")
-B_all = get_set_B(c, d, e, f)
+B_all = get_set_B(C, D, E, F)
 B_min = find_minimal_elements(B_all)
 
 print(f"Liczba punktów w B: {len(B_all)}")
