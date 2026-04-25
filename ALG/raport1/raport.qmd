@@ -1,6 +1,6 @@
 ---
 title: "Sprawozdanie – 1"
-author: "Jan Ryszkiewicz"
+author: "Jan Ryszkiewicz 282210"
 format:
   pdf:
     toc: false
@@ -44,10 +44,22 @@ A = 2; B = 8; C = 2; D = 2; E = 1; F = 0
 
 Liczba Gaussa to liczba zespolona postaci $z = p + qi$, gdzie $p, q \in \mathbb{Z}$.
 Reprezentowana jest jako obiekt klasy `GaussianInt` z dwoma polami całkowitymi:
-`re` i `im`. Dodawanie i mnożenie odpowiadają
-standardowym działaniom na liczbach zespolonych z wynikami w $\mathbb{Z}$.
+`re` i `im`. Dodawanie i mnożenie odpowiadają standardowym działaniom na liczbach zespolonych z wynikami w $\mathbb{Z}$.
 
+Norma liczby $p+qi$ jest równa $p^2 + q^2$
+
+Funkcja `euclidean_divide` jest wprowadzona do klasy `GaussianInt` jako operator ``__divmod__``
+
+Dzielenie z resztą: $z = w\cdot q + r$ , $N(r) < N(w)$.
+Obliczamy $z\cdot \bar{w} / N(w)$ w $\mathbb{Q}[i]$, zaokrąglamy `re` i `im` do najbliższej liczby całkowitej – błąd zaokrąglenia
+wynosi co najwyżej 1/2 w każdej składowej, więc N(r) <= N(w)/2.
+
+Samo NNW i NWD są łączne - stąd implementacja ich na listach jest równoznaczna z przeprowadzeniu kolejnościowego mapowania tych funkcji na elementach listy:
+NWD(a, b, c) = NWD(NWD(a,b), c)
+
+*1a) Implementacja (z elementami 1c) - listy):*
 ```{python}
+#| include: false
 class GaussianInt:
     def __init__(self, re, im):
         self.re = int(re)
@@ -69,133 +81,100 @@ class GaussianInt:
 
     def __str__(self):
         return f"{self.re} {"-" if self.im < 0 else "+"} {abs(self.im)}i"
+    
+    def __divmod__(self, other):
+        return euclidean_divide(self, other)
 
     def conjugate(self):
         return GaussianInt(self.re, -self.im)
 
     def norm(self):
-        """Norma: N(p+qi) = p^2 + q^2"""
         return self.re**2 + self.im**2
+```
 
-    @staticmethod
-    def divide(a, b):
-        """
-        Dzielenie z resztą: z = w*q + r, N(r) < N(w).
-        Obliczamy z*conj(w) / N(w) w Q[i], zaokrąglamy obie
-        składowe do najbliższej liczby całkowitej – błąd zaokrąglenia
-        wynosi co najwyżej 1/2 w każdej składowej, więc N(r) <= N(w)/2.
-        """
-        div = b.norm()
-        if div == 0:
-            raise ZeroDivisionError()
-        num = a * b.conjugate()
-        q_re = round(num.re / div)
-        q_im = round(num.im / div)
-        q = GaussianInt(q_re, q_im)
-        r = a - (b * q)
-        return q, r
+```{python}
+def euclidean_divide(a, b):
+    div = b.norm();
+    if div == 0: raise ZeroDivisionError()
+    num = a * b.conjugate()
+    q_re = round(num.re / div)
+    q_im = round(num.im / div)
+    q = GaussianInt(q_re, q_im)
+    r = a - (b * q)
+    return q, r
 
 def gcd_gauss(a, b):
-    """NWD algorytmem Euklidesa dla liczb Gaussa."""
     while b.norm() != 0:
-        a, b = b, GaussianInt.divide(a, b)[1]
+        a, b = b, divmod(a, b)[1]
     return a
 
-
 def lcm_gauss(a, b):
-    """NWW = a/NWD(a,b) * b"""
     g = gcd_gauss(a, b)
-    if g.norm() == 0:
-        return GaussianInt(0, 0)
-    q, _ = GaussianInt.divide(a, g)
+    if g.norm() == 0: return GaussianInt(0, 0)
+    q, _ = divmod(a, g)
     return q * b
 
-
 def gcd_list(nums):
-    """NWD dla listy liczb Gaussa (dowolna długość)."""
-    if not nums:
-        return GaussianInt(0, 0)   # lista pusta → 0 (element neutralny)
-    if len(nums) == 1:
-        return nums[0]             # lista 1-elementowa → jedyny element
+    if not nums: return GaussianInt(0, 0)   # lista pusta -> 0
+    if len(nums) == 1: return nums[0]       # lista 1-elementowa -> jedyny element
     res = nums[0]
     for x in nums[1:]:
         res = gcd_gauss(res, x)
     return res
 
-
 def lcm_list(nums):
-    """NWW dla listy liczb Gaussa (dowolna długość)."""
-    if not nums:
-        return GaussianInt(0, 0)   # lista pusta → 0
-    if len(nums) == 1:
-        return nums[0]             # lista 1-elementowa → jedyny element
+    if not nums: return GaussianInt(0, 0)   # lista pusta -> 0
+    if len(nums) == 1: return nums[0]       # lista 1-elementowa -> jedyny element
     res = nums[0]
     for x in nums[1:]:
         res = lcm_gauss(res, x)
     return res
-
-
-# Jednostki Z[i]
-units = [GaussianInt(1,0), GaussianInt(-1,0), GaussianInt(0,1), GaussianInt(0,-1)]
 ```
 
+*1b) Norma $N(a+bi)$ i dzielenie $(c+ai)(d+bi)$ przez $e+fi$:*
 
-1b) – Norma $N(a+bi)$ i dzielenie $(c+ai)(d+bi)$ przez $e+fi$
+W $\mathbb{Z}[i]$ NWD i iloraz są wyznaczone z dokładnością do mnożenia przez jednostkę (tj. przemnożenie przez nie nie zmienia normy).
+Jednostki to $\mathbb{Z}[i]^* = \{1, -1, i, -i\}$ ma **4 elementy**
+(jedyne liczby Gaussa o normie 1), dlatego wyników jest dokładnie 4.
 
 ```{python}
-N_z = GaussianInt(A, B)
-print(f"N({A}+{B}i) = N{N_z} = {N_z.norm()}")
+#| echo: false
+print(f"N({GaussianInt(A, B)}) = {GaussianInt(A, B).norm()}")
+print(f"(c + ai)(d + bi) = {GaussianInt(C, A) * GaussianInt(D, B)}")
+print(f"e + fi = {GaussianInt(E, F)},  (N(e + fi) = {GaussianInt(E, F).norm()})")
 print()
 
-# Licznik: (c+ai)(d+bi)
 numerator = GaussianInt(C, A) * GaussianInt(D, B)
 divisor   = GaussianInt(E, F)
-print(f"Licznik: ({C}+{A}i)*({D}+{B}i) = {numerator}")
-print(f"Dzielnik: {divisor}  (norma = {divisor.norm()})")
-```
+units = [GaussianInt(1,0), GaussianInt(-1,0), GaussianInt(0,1), GaussianInt(0,-1)]
 
-```{python}
-# Gdy e=1, f=0 → dzielnik to 1, wynik to sam licznik
 if divisor.norm() == 0:
     print("Dzielnik jest zerem – brak wyniku.")
-elif divisor == GaussianInt(1, 0):
-    print(f"Dzielnik = 1, więc wynik = {numerator}, reszta = (0 + 0i)")
-    print()
-    print("Wszystkie możliwe wyniki (skojarzenia z dokładnością do jednostek):")
-    for u in units:
-        print(f"  {numerator} * {u} = {numerator * u}")
 else:
-    q_b, r_b = GaussianInt.divide(numerator, divisor)
-    print(f"Wynik: q = {q_b}, reszta = {r_b}")
-    print()
-    print("Wszystkie możliwe wyniki (skojarzenia):")
+    q_b, r_b = divmod(numerator, divisor)
+    print(f"Wynik podstawowy: q = {q_b}, reszta = {r_b}")
+    print("Wszystkie możliwe wyniki (dokładność do jednostki):")
     for u in units:
-        print(f"  {q_b} * {u} = {q_b * u}")
+        print(f"  ({q_b})({u}) = {q_b * u}")
 ```
 
-**Uzasadnienie braku większej liczby wyników:**
-W $\mathbb{Z}[i]$ NWD i iloraz są wyznaczone z dokładnością do mnożenia przez jednostkę.
-Grupa jednostek $\mathbb{Z}[i]^* = \{1, -1, i, -i\}$ ma dokładnie **4 elementy**
-(są to jedyne liczby Gaussa o normie 1), dlatego możliwych wyników jest dokładnie 4.
-
-1c) – NWD i NWW dla trójki liczb Gaussa
+*1c) NWD i NWW dla trójki $a + bi$, $c + di$, $e + di$:* 
 
 ```{python}
+#| echo: false
 z1 = GaussianInt(A, B)   # a+bi
 z2 = GaussianInt(C, D)   # c+di
-z3 = GaussianInt(E, D)   # e+di  (zgodnie z treścią: e+di)
+z3 = GaussianInt(E, D)   # e+di
 
 print(f"z1 = {z1},  z2 = {z2},  z3 = {z3}")
-print()
-
 g3 = gcd_list([z1, z2, z3])
 l3 = lcm_list([z1, z2, z3])
 print(f"NWD(z1, z2, z3) = {g3}")
 print(f"NWW(z1, z2, z3) = {l3}")
 
-print("\nWszystkie skojarzenia NWD (4 asocjaty):")
+print("\nWszystkie NWD:")
 for u in units:
-    print(f"  {g3 * u}")
+    print(f"  ({g3})({u}) = {g3 * u}")
 
 print("\nWywołania brzegowe:")
 print(f"  gcd_list([])   = {gcd_list([])}")
@@ -204,30 +183,29 @@ print(f"  lcm_list([])   = {lcm_list([])}")
 print(f"  lcm_list([z1]) = {lcm_list([z1])}")
 ```
 
-**Wyjaśnienie wywołań brzegowych:**
-
-- Lista pusta: przyjmujemy $\operatorname{NWD}(\emptyset) = 0$ (element neutralny dla NWD –
-  każda liczba dzieli 0) i $\operatorname{NWW}(\emptyset) = 0$.
-- Lista 1-elementowa $[z]$: $\operatorname{NWD}(z) = z$ i $\operatorname{NWW}(z) = z$.
-
 ---
 
 # Zad 2 – Pierścień wielomianów $\mathbb{R}[x]$
 
-## Reprezentacja wielomianów
+Wielomian reprezentowany jest jako słownik `{potęga: współczynnik}` \
+np. $x^4 + 2x^2 - 1 \leftrightarrow$ `{4: 1, 2: 2, 0: -1}` \
+Implementacja: \
+- jest wydajna dla wielomianów rzadkich i prosta w obsłudze. \
+- łatwo uogólnia się na $\kappa[x_1,\ldots,x_n]$ przez użycie obiektów ciała $\kappa$ jako kluczy: {2: $\kappa_1$ , 1: $\kappa_2$, 0: 1} dla $\kappa_1x^2 + \kappa_2x + 1$.
 
-Wielomian reprezentowany jest jako słownik `{potęga: współczynnik}`,
-np. $x^3 - 1 \leftrightarrow$ `{3: 1, 0: -1}`.
-Zerowe współczynniki są pomijane (słownik rzadki).
-Taka reprezentacja:
+*Norma:* stopień wielomianu $\deg(p)$ - Wielomian zerowy ma normę $-1$
 
-- jest wydajna dla wielomianów rzadkich,
-- łatwo uogólnia się na $\kappa[x_1,\ldots,x_n]$ przez użycie krotek jako kluczy
-  (np. `(2,1,0)` dla $x_1^2 x_2$).
+*Dzielenie z resztą:* zwykłe dzielenie wielomianów w słupku
 
-## Implementacja
+*NWD:* algorytm Euklidesa identyczny jak dla $\mathbb{Z}[i]$, z normalizacją
+współczynnika wiodącego wyniku do 1.
+
+*NWW:* $\operatorname{NWW}(a,b) = \frac{a}{\operatorname{NWD}(a,b)} \cdot b$.
+
+*Rozszerzony NWD (exgcd):* śledzimy $(s, t)$ przy każdym kroku. Zwraca trójkę: ($\operatorname{NWD}(a,b)$, $s$, $t$) takie, że $s \cdot a + t \cdot b = \operatorname{NWD}(a,b)$. \
 
 ```{python}
+#| echo: false
 class Polynomial:
     def __init__(self, coeffs):
         self.data = {k: v for k, v in coeffs.items() if abs(v) > 1e-12}
@@ -258,7 +236,7 @@ class Polynomial:
                 res[deg] = res.get(deg, 0) + v1 * v2
         return Polynomial(res)
 
-    def __repr__(self):
+    def __str__(self):
         if not self.data:
             return "0"
         terms = []
@@ -274,16 +252,9 @@ class Polynomial:
         return " + ".join(terms).replace("+ -", "- ")
 
     def norm(self):
-        """Norma = stopień wielomianu (-1 dla wielomianu zerowego)."""
         return self.degree()
 
-    @staticmethod
-    def div_mod(f, g):
-        """
-        Dzielenie z resztą: f = g*q + r, deg(r) < deg(g).
-        Na każdym kroku wyznaczamy wyraz wiodący reszty i odejmujemy
-        odpowiedni wielomian jednowyrazowy razy g.
-        """
+    def __divmod__(f, g):
         q = {}
         r = dict(f.data)
         while r and max(r.keys()) >= g.degree():
@@ -298,27 +269,21 @@ class Polynomial:
                     r.pop(new_deg, None)
         return Polynomial(q), Polynomial(r)
 
-
 def gcd_poly(a, b):
-    """NWD wielomianów algorytmem Euklidesa, wynik unormowany (lc=1)."""
     while b.degree() != -1:
-        a, b = b, Polynomial.div_mod(a, b)[1]
-    if a.degree() >= 0:
+        a, b = b, divmod(a, b)[1]
+    if a.degree() >= 0: # normalizacja
         lc = a.leading_coeff()
         a = Polynomial({k: v/lc for k, v in a.data.items()})
     return a
 
 
-def xgcd(a, b):
-    """
-    Rozszerzony algorytm Euklidesa: zwraca (g, s, t) t.że s*a + t*b = g = NWD(a,b).
-    Analogicznie do Z[i] – śledzimy współczynniki Bézouta.
-    """
+def exgcd(a, b):
     old_r, r = a, b
     old_s, s = Polynomial({0: 1}), Polynomial({})
     old_t, t = Polynomial({}), Polynomial({0: 1})
     while r.degree() != -1:
-        q, res = Polynomial.div_mod(old_r, r)
+        q, res = divmod(old_r, r)
         old_r, r = r, res
         old_s, s = s, old_s + (Polynomial({0: -1}) * q * s)
         old_t, t = t, old_t + (Polynomial({0: -1}) * q * t)
@@ -326,144 +291,94 @@ def xgcd(a, b):
     return (
         Polynomial({k: v/lc for k, v in old_r.data.items()}),
         Polynomial({k: v/lc for k, v in old_s.data.items()}),
-        Polynomial({k: v/lc for k, v in old_t.data.items()}),
-    )
+        Polynomial({k: v/lc for k, v in old_t.data.items()}),)
 
 
 def lcm_poly(a, b):
-    """NWW wielomianów: lcm(a,b) = (a / gcd(a,b)) * b."""
     g = gcd_poly(a, b)
     if g.degree() == -1:
         return Polynomial({})
-    q, _ = Polynomial.div_mod(a, g)
+    q, _ = divmod(a, g)
     return q * b
 ```
 
-## Opis kluczowych funkcji
-
-**Norma:** stopień wielomianu $\deg(p)$ (analogicznie do normy w $\mathbb{Z}[i]$).
-Wielomian zerowy ma normę $-1$ (lub $-\infty$).
-
-**Dzielenie z resztą:** na wzór szkolnego dzielenia wielomianów – w każdym kroku
-eliminujemy wyraz wiodący reszty, odejmując odpowiedni wielomian jednowyrazowy $\cdot g$.
-Kończymy gdy $\deg(r) < \deg(g)$.
-
-**NWD:** algorytm Euklidesa identyczny jak dla $\mathbb{Z}[i]$, z normalizacją
-współczynnika wiodącego do 1.
-
-**NWW:** $\operatorname{NWW}(a,b) = \frac{a}{\operatorname{NWD}(a,b)} \cdot b$.
-
-**Rozszerzony NWD (xgcd):** śledzimy współczynniki Bézouta $(s, t)$ przy każdym
-kroku Euklidesa. Wynik: $s \cdot a + t \cdot b = \operatorname{NWD}(a,b)$.
-
-## Zadanie 2a – Norma i dzielenie wielomianu $cx^a + b$ przez $x - 1$
+*2a) Norma i dzielenie $cx^a + b$ przez $x - 1$*
 
 ```{python}
-# cx^a + b  =  2x^2 + 8
+#| echo: false
 p_poly = Polynomial({A: C, 0: B})
-div_poly = Polynomial({1: 1, 0: -1})   # x - 1
+div_poly = Polynomial({1: 1, 0: -1})
 
-print(f"p(x)         = {p_poly}")
-print(f"Norma p(x)   = {p_poly.norm()}  (stopień)")
-print(f"Dzielnik     = {div_poly}")
+print(f"cx^a + b       = {p_poly}")
+print(f"N(cx^a + b)    = {p_poly.norm()}  (deg)")
+print(f"Dzielnik       = {div_poly}")
 print()
 
-q_poly, r_poly = Polynomial.div_mod(p_poly, div_poly)
-print(f"p(x) / (x-1) = {q_poly},  reszta = {r_poly}")
-print()
-# Twierdzenie Bézouta: reszta = p(1)
-val_at_1 = sum(v * (1**k) for k, v in p_poly.data.items())
-print(f"Sprawdzenie (tw. Bézouta): p(1) = {val_at_1:.6g}  (= reszta ✓)")
+q_poly, r_poly = divmod(p_poly, div_poly)
+print(f"{p_poly} / {div_poly} = {q_poly},  r = {r_poly}")
 ```
 
-## Zadanie 2b – Rozszerzony NWD i NWW
+*2b) – Rozszerzony NWD i NWW*
 
 ```{python}
-# v(x) = ax^3 + bx^2 + cx + d = 2x^3 + 8x^2 + 2x + 2
+#| echo: false
 v_poly = Polynomial({3: A, 2: B, 1: C, 0: D})
-# w(x) = dx^3 + ex^2 + fx     = 2x^3 + x^2 + 0x
 w_poly = Polynomial({3: D, 2: E, 1: F})
 
 print(f"v(x) = {v_poly}")
 print(f"w(x) = {w_poly}")
 print()
 
-g_xgcd, s_xgcd, t_xgcd = xgcd(v_poly, w_poly)
+g_xgcd, s_xgcd, t_xgcd = exgcd(v_poly, w_poly)
 print(f"NWD(v,w)  = {g_xgcd}")
 print(f"s(x)      = {s_xgcd}")
 print(f"t(x)      = {t_xgcd}")
 check = s_xgcd * v_poly + t_xgcd * w_poly
-print(f"s*v + t*w = {check}  (powinno być = NWD)")
+print(f"s*v + t*w = {check}")
 ```
 
-```{python}
-# Szukamy stałej g taką że NWD(v, w+g) nie jest stały (deg > 0),
-# czyli 1 nie należy do NWD.
-print("Poszukiwanie g, dla których NWD(v, w+g) ma stopień > 0:\n")
-found = []
-for g_val in range(-20, 21):
-    w_shifted = w_poly + Polynomial({0: float(g_val)})
-    nwd = gcd_poly(v_poly, w_shifted)
-    if nwd.degree() > 0:
-        found.append((g_val, nwd))
-        print(f"  g = {g_val:3d}:  NWD(v, w+g) = {nwd}")
+Jedynym pierwiastkiem $v(x)$ jest $\frac{1}{3} \left( -4 - 13 \sqrt[3]{\frac{2}{119 - 3\sqrt{597}}} - \sqrt[3]{\frac{1}{2} (119 - 3\sqrt{597})} \right) \approx -3.8063 = r$ (Wolfram alpha) \
+Teraz $(x - r)$ dzieli $v(x)$ więc chcemy by $(x - r)$ dzieliło $w(x) + g$ tj. $w(r) + g = 0$ czyli $g = -w(r) \approx -95.80287459036$ (Wolfram Alpha)
 
-print()
-if found:
-    g_choice, nwd_choice = found[0]
-    w_g = w_poly + Polynomial({0: float(g_choice)})
-    nww_choice = lcm_poly(v_poly, w_g)
-    print(f"Wybieramy g = {g_choice}:")
-    print(f"  NWD(v, w+{g_choice}) = {nwd_choice}")
-    print(f"  NWW(v, w+{g_choice}) = {nww_choice}")
-else:
-    print("Dla podanych wartości a-f brak takiego g w przedziale [-20,20].")
+```{python}
+#| echo: false
+g = -95.80287459036
+v_poly = Polynomial({3: A, 2: B, 1: C, 0: D})
+w_poly = Polynomial({3: D, 2: E, 1: F, 0: g})
+print(f"NWW(v,w + g)  = {lcm_poly(v_poly, w_poly)}")
 ```
 
 ---
 
-# Laboratorium 3 – Porządki produktowe na $\mathbb{N}^n$
-
-## Implementacja i opis algorytmu
+# Zad 3 – Porządki produktowe na $\mathbb{N}^n$
 
 ```{python}
 def is_less_equal(p1, p2):
-    """Porządek produktowy: p1 ≤ p2 ⟺ ∀i: p1[i] ≤ p2[i]"""
     return all(x <= y for x, y in zip(p1, p2))
 
 
 def compare(p1, p2):
-    """Relacja między p1 a p2 w porządku produktowym."""
     le = is_less_equal(p1, p2)
     ge = is_less_equal(p2, p1)
-    if le and ge: return "="
-    if le:        return "<"
-    if ge:        return ">"
-    return "∥"    # nieporównywalne
+    if le and ge: return "=="
+    if le:        return "=<"
+    if ge:        return ">="
+    return "||"
 
 
 def find_minimal_elements(points):
-    """
-    Wyznacza elementy minimalne zbioru w porządku produktowym.
-
-    Algorytm: przeglądamy punkty jeden po drugim.
-    Punkt p jest dodawany do zbioru minimów tylko wtedy,
-    gdy żaden dotychczasowy minimum go nie dominuje (p nie jest ≥ żadnego minimum).
-    Jednocześnie usuwamy z minimów te punkty, które p dominuje.
-    Złożoność: O(|points| * |minima|).
-    """
     minima = []
     for p in points:
-        is_dominated = any(is_less_equal(m, p) for m in minima)
-        if not is_dominated:
+        if not any(is_less_equal(m, p) for m in minima):
             minima = [m for m in minima if not is_less_equal(p, m)]
             minima.append(p)
     return sorted(minima)
 ```
 
-## Zadanie 3a – Porównanie par w $\mathbb{N}^2$
+*3a Porównanie par w $\mathbb{N}^2$*
 
 ```{python}
+#| echo: false
 pairs_2d = [(A, B), (C, D), (E, F)]
 labels_2d = [f"({A},{B})", f"({C},{D})", f"({E},{F})"]
 
@@ -475,22 +390,24 @@ for i in range(len(pairs_2d)):
             print(f"  {labels_2d[i]}  {rel}  {labels_2d[j]}")
 ```
 
-## Zadanie 3b – Porównanie trójek w $\mathbb{N}^3$
+*3b) Porównanie trójek w $\mathbb{N}^3$*
 
 ```{python}
+#| echo: false
 triples_3d = [(A, C, E), (B, D, F)]
 labels_3d  = [f"({A},{C},{E})", f"({B},{D},{F})"]
 
-print("Porównanie trójek (porządek produktowy na N^3):\n")
+print("Porównanie trójek:\n")
 rel = compare(triples_3d[0], triples_3d[1])
 print(f"  {labels_3d[0]}  {rel}  {labels_3d[1]}")
 ```
 
-## Zadanie 3 – Elementy minimalne zbiorów $A$ i $B$
+*3c) – Elementy minimalne zbiorów $A$ i $B$*
 
-### Zbiór $A = \{(x,y) \in \mathbb{N}^2 : (x-a)^2 + (y-b)^2 \leq 5\}$
+Zbiór $A = \{(x,y) \in \mathbb{N}^2 : (x-a)^2 + (y-b)^2 \leq 5\}$
 
 ```{python}
+#| echo: false
 def get_set_A(a, b):
     points = []
     for x in range(max(0, a-3), a+4):
@@ -503,32 +420,36 @@ A_all = get_set_A(A, B)
 A_min = find_minimal_elements(A_all)
 
 print(f"Wszystkie punkty A ({len(A_all)} elementów):")
-print(sorted(A_all))
-print()
 print(f"Elementy minimalne A ({len(A_min)}):")
 print(A_min)
 ```
 
-### Zbiór $B = \{(x_1,x_2,x_3,x_4) \in \mathbb{N}^4 : (x_1-c)^2+(x_2-d)^2+(x_3-e)^2+(x_4-f)^2 < 224\}$
+Zbiór $B = \{(x_1,x_2,x_3,x_4) \in \mathbb{N}^4 : (x_1-c)^2+(x_2-d)^2+(x_3-e)^2+(x_4-f)^2 > 224\}$
 
 ```{python}
+#| echo: false
+R = 5
 def get_set_B(c, d, e, f):
     points = []
-    r = 15   # sqrt(224) ≈ 14.97
+    r = 14 + 1 + R   # sqrt(224) ≈ 14.97
     for x1 in range(max(0, c-r), c+r+1):
         for x2 in range(max(0, d-r), d+r+1):
             for x3 in range(max(0, e-r), e+r+1):
                 for x4 in range(max(0, f-r), f+r+1):
-                    if (x1-c)**2+(x2-d)**2+(x3-e)**2+(x4-f)**2 < 224:
+                    if (x1-c)**2+(x2-d)**2+(x3-e)**2+(x4-f)**2 > 224:
                         points.append((x1, x2, x3, x4))
     return points
 
-print("Wyznaczanie elementów minimalnych zbioru B (może chwilę potrwać)...")
 B_all = get_set_B(C, D, E, F)
 B_min = find_minimal_elements(B_all)
 
-print(f"Liczba punktów w B: {len(B_all)}")
+print(f"Liczba punktów w B ({R} odległość od krawędzi kuli): {len(B_all)}")
 print(f"Elementy minimalne B ({len(B_min)}):")
-for pt in B_min:
-    print(f"  {pt}")
+if(len(B_min) < 10):
+    for pt in B_min:
+        print(f"  {pt}")
+else:
+    print(f"{len(B_min)} to troche za dużo żeby to wypisać \n pierwsze 10:")
+    for pt in B_min[:10]:
+        print(f"  {pt}")
 ```
