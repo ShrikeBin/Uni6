@@ -162,9 +162,9 @@ else:
 
 ```{python}
 #| echo: false
-z1 = GaussianInt(A, B)   # a+bi
-z2 = GaussianInt(C, D)   # c+di
-z3 = GaussianInt(E, D)   # e+di
+z1 = GaussianInt(A, B)
+z2 = GaussianInt(C, D)
+z3 = GaussianInt(E, D)
 
 print(f"z1 = {z1},  z2 = {z2},  z3 = {z3}")
 g3 = gcd_list([z1, z2, z3])
@@ -431,7 +431,7 @@ Zbiór $B = \{(x_1,x_2,x_3,x_4) \in \mathbb{N}^4 : (x_1-c)^2+(x_2-d)^2+(x_3-e)^2
 R = 5
 def get_set_B(c, d, e, f):
     points = []
-    r = 14 + 1 + R   # sqrt(224) ≈ 14.97
+    r = 15 + R   # sqrt(224) ≈ 14.97
     for x1 in range(max(0, c-r), c+r+1):
         for x2 in range(max(0, d-r), d+r+1):
             for x3 in range(max(0, e-r), e+r+1):
