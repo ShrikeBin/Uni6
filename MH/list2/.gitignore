@@ -1,0 +1,6 @@
+/.quarto/
+**/*.quarto_ipynb
+data/*.tsp
+run/run
+/results/
+report.pdf
