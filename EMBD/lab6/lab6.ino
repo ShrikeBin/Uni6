@@ -16,7 +16,7 @@ uint32_t lastCode = 0xE31CFF00;
 unsigned long lastIRReadTime = 0;
 unsigned long lastRepeatRead = 0;
 const unsigned long IR_READ_COOLDOWN = 300; // milliseconds
-const unsigned long MOVEMENT_READ_COOLDOWN = 200; // milliseconds
+const unsigned long MOVEMENT_READ_COOLDOWN = 500; // milliseconds
 
 byte LCDAddress = 0x27;
 LiquidCrystal_I2C lcd(LCDAddress, 16, 2);
@@ -56,9 +56,10 @@ void setup() {
 
 unsigned long PERIOD_LCD = 200;
 unsigned long PERIOD_WHEELS = 50;
-unsigned long PERIOD_MOVEMENT = 10;
+unsigned long PERIOD_MOVEMENT = 100;
 unsigned long PERIOD_LED = 10;
 unsigned long PERIOD_SONAR = 50;
+unsigned long PERIOD_CRASH_PREVENTION = 25;
 
 unsigned long GLOBAL_T = 0;
 unsigned long DISTANCE = 0;
@@ -66,11 +67,12 @@ unsigned long DISTANCE_SONAR = 1000;
 volatile char IS_DONE = 0;
 volatile char MOVEMENT_TYPE = 0; // 0 - stop, 1 - forward, 2 - backward, 3 - left, 4 - right
 
-Ticker WHEELS = Ticker(50, *wheel_fun);
+Ticker WHEELS = Ticker(PERIOD_WHEELS, *wheel_fun);
 Ticker LCD = Ticker(PERIOD_LCD, *lcd_fun);
 Ticker MOVEMENT = Ticker(PERIOD_MOVEMENT, *movement_fun);
 Ticker LED = Ticker(PERIOD_LED, *led_fun);
 Ticker SONAR = Ticker(PERIOD_SONAR, *sonar_fun);
+Ticker CRASH_PREVENTION = Ticker(PERIOD_CRASH_PREVENTION, *crash_fun);
 
 void loop() 
 {
@@ -80,6 +82,7 @@ void loop()
   LCD.check();
   MOVEMENT.check();
   LED.check();
+  CRASH_PREVENTION.check();
 }
 
 void ir_fun() {
@@ -134,6 +137,13 @@ void ir_fun() {
   }
 }
 
+void movement_fun(){
+  if(RECEIVING_REPEAT == 0)
+  {
+    MOVEMENT_TYPE = 0;
+  }
+}
+
 void lcd_fun(){
       lcd.clear();
       lcd.setCursor(0,0);
@@ -141,7 +151,7 @@ void lcd_fun(){
       lcd.print((cnt1 + cnt0 )/ 2);
       lcd.print(" ");
       lcd.print(decodeIR(lastCode));
-      lcd.print(" ")
+      lcd.print(" ");
       lcd.print(RECEIVING_REPEAT);
       lcd.setCursor(0,1);
       if(MOVEMENT_TYPE == 0){
@@ -182,11 +192,7 @@ void wheel_fun(){
 
 unsigned volatile int BLOCK_SONAR = 0;
 
-void movement_fun(){
-  if(RECEIVING_REPEAT == 0)
-  {
-    MOVEMENT_TYPE = 0;
-  }
+void crash_fun(){
   // Maybe adjust for the serwo drift
   if(DISTANCE_SONAR < 30)
   {
