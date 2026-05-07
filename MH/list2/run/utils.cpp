@@ -225,5 +225,5 @@ TabuResult tabu_search(
         ++iter;
     }
 
-    return {best_tour, best_dist};
+    return {best_tour, best_dist, iter, max_iter_no_improve, tabu_tenure, sample_size};
 }

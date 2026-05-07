@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <chrono>
 #include <algorithm>
+#include <cmath>
 
 // Global random generator
 std::random_device RD;
@@ -20,7 +21,20 @@ void run_for_file(const std::vector<City>& cities, const std::string& filename) 
         }
     }
 
-    //TODO Do stuff lmao
+    // Taboo experiments
+    std::vector<uint_fast32_t> tenures = {5, 10, static_cast<uint_fast32_t>(std::log(n)), static_cast<uint_fast32_t>(std::sqrt(n))};
+    std::vector<uint_fast32_t> max_iters = {static_cast<uint_fast32_t>(std::sqrt(n)), 100, 1000};
+    std::vector<uint_fast32_t> sample_sizes = {static_cast<uint_fast32_t>(std::sqrt(n)), n};
+
+    std::vector<uint_fast32_t> best_tour_taboo = random_tour(n, GEN);
+    for(auto tenure : tenures) {
+        for(auto max_iter : max_iters) {
+            for (auto sample_size : sample_sizes) {
+                TabuResult result = tabu_search(best_tour_taboo, dist_matrix, GEN, tenure, max_iter, sample_size);
+            }
+        }
+    }
+    // or smth idk today
 }
 
 int main(int argc, char* argv[]) {

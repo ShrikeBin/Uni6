@@ -45,6 +45,10 @@ struct SAResult {
 struct TabuResult {
   std::vector<uint_fast32_t> tour;
   uint_fast32_t distance;
+  uint_fast32_t iters;
+  uint_fast32_t max_iters_no_improve;
+  uint_fast32_t tenure;
+  uint_fast32_t sample_size;
 };
 
 SAResult simulated_annealing(
