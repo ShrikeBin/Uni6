@@ -132,14 +132,14 @@ SAResult simulated_annealing(
         }
     }
 
-    return {best_tour, best_dist};
+    return {best_tour, best_dist, initial_temp, cooling_rate, epoch_length, max_epochs_no_improve};
 }
 
 TabuResult tabu_search(
     std::vector<uint_fast32_t> initial_tour,
     const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
     std::mt19937& GEN,
-    uint_fast32_t tabu_tenure,
+    uint_fast32_t tabu_cooldown,
     uint_fast32_t max_iter_no_improve,
     uint_fast32_t sample_size)
 {
@@ -212,7 +212,7 @@ TabuResult tabu_search(
             static_cast<int_fast64_t>(current_dist) + best_delta);
 
         // Mark move as tabu
-        tabu_list[best_i][best_j] = iter + tabu_tenure;
+        tabu_list[best_i][best_j] = iter + tabu_cooldown;
 
         if (current_dist < best_dist) {
             best_dist = current_dist;
@@ -225,5 +225,5 @@ TabuResult tabu_search(
         ++iter;
     }
 
-    return {best_tour, best_dist, iter, max_iter_no_improve, tabu_tenure, sample_size};
+    return {best_tour, best_dist, iter, max_iter_no_improve, tabu_cooldown, sample_size};
 }
