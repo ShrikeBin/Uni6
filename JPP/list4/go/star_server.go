@@ -35,7 +35,7 @@ func server(inbox <-chan Message, deliveries []chan Message, done chan<- struct{
 	count := 0
 	srvLog("SERVER", fmt.Sprintf("started, expecting %d messages", total))
 	for msg := range inbox {
-		srvLog("SERVER", fmt.Sprintf("relaying msg from User%d to User%d (seq=%d)",
+		srvLog("SERVER", fmt.Sprintf("relaying msg from User%d to User%d (content=%d)",
 			msg.From, msg.To, msg.Content))
 		deliveries[msg.To] <- msg
 
@@ -61,14 +61,14 @@ func user(id int, inbox <-chan Message, serverCh chan<- Message, wg *sync.WaitGr
 		for seq := 1; seq <= msgsPerUser; seq++ {
 			time.Sleep(time.Duration(rand.Intn(4)+1) * 15 * time.Millisecond)
 			dest := rand.Intn(numUsers)
-			srvLog(name, fmt.Sprintf("sending msg #%d to User%d", seq, dest))
+			srvLog(name, fmt.Sprintf("sending msg (content=%d) to User%d", seq, dest))
 			serverCh <- Message{From: id, To: dest, Content: seq}
 		}
 		srvLog(name, "finished sending.")
 	}()
 
 	for msg := range inbox {
-		srvLog(name, fmt.Sprintf("received msg from User%d (seq=%d)", msg.From, msg.Content))
+		srvLog(name, fmt.Sprintf("received msg from User%d (content=%d)", msg.From, msg.Content))
 	}
 }
 
@@ -102,7 +102,7 @@ func runStarServer() {
 
 	wg.Wait()
 
-	fmt.Println("\n=== FINAL REPORT ===")
+	fmt.Println("\n=== RESULTS ===")
 	for i := 0; i < numUsers; i++ {
 		fmt.Printf("User %d received: %d message(s)\n", i, received[i])
 	}

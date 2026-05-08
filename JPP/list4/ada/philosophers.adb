@@ -35,6 +35,7 @@ procedure Philosophers is
       Seats_Taken : Integer := 0;
    end Waiter;
 
+   -- Responsible for seat allocation
    protected body Waiter is
       entry Request_Seat when Seats_Taken < Num_Philosophers - 1 is
       begin
@@ -60,7 +61,7 @@ procedure Philosophers is
       end Log;
    end Logger;
 
-   -- Barrier: main blocks until all philosophers finish
+   -- Main block until all philosophers finish
    protected Barrier is
       procedure Signal;
       entry Wait_All;
@@ -124,23 +125,23 @@ procedure Philosophers is
          Waiter.Request_Seat;
 
          Forks (Left).Pick_Up;
-         Logger.Log (My_Id, "picked up LEFT fork");
+         Logger.Log (My_Id, "picks up LEFT fork");
          Forks (Right).Pick_Up;
-         Logger.Log (My_Id, "picked up RIGHT fork");
+         Logger.Log (My_Id, "picks up RIGHT fork");
 
          Meals := Meals + 1;
-         Logger.Log (My_Id, "*** EATING meal" & Integer'Image (Meals) & " ***");
+         Logger.Log (My_Id, "*** EATS " & Integer'Image (Meals) & " ***");
          delay Duration (Float (Rand_Int.Random (Gen) mod 3 + 1) * 0.05);
 
          Forks (Left).Put_Down;
          Forks (Right).Put_Down;
-         Logger.Log (My_Id, "put down forks");
+         Logger.Log (My_Id, " puts forks down");
 
          Waiter.Leave_Seat;
       end loop;
 
       Results.Report (My_Id, Failures);
-      Logger.Log (My_Id, "finished all meals. Failures:" & Integer'Image (Failures));
+      Logger.Log (My_Id, "finished feasting. Failures:" & Integer'Image (Failures));
       Barrier.Signal;
    end Philosopher_Task;
 
@@ -161,7 +162,7 @@ begin
    Barrier.Wait_All;
 
    Put_Line ("");
-   Put_Line ("=== FINAL REPORT ===");
+   Put_Line ("=== RESULTS ===");
    for I in 0 .. Num_Philosophers - 1 loop
       Put ("Philosopher ");
       Put (I, Width => 1);
@@ -169,6 +170,4 @@ begin
       Put (Results.Get_Fails (I), Width => 1);
       Put_Line (" times");
    end loop;
-   Put_Line ("Fairness: all philosophers ate exactly" &
-             Integer'Image (Meals_Per_Phil) & " meals (waiter guarantees no starvation).");
 end Philosophers;

@@ -53,21 +53,21 @@ func philosopher(id int, wg *sync.WaitGroup) {
 		logMsg(id, "is thinking...")
 		time.Sleep(time.Duration(rand.Intn(3)+1) * 20 * time.Millisecond)
 
-		logMsg(id, "is hungry, requesting seat...")
+		logMsg(id, "is hungry, waits for a seat...")
 		waiter.Sit()
 
 		forks[left].Lock()
-		logMsg(id, "picked up LEFT fork")
+		logMsg(id, "picks up LEFT fork")
 		forks[right].Lock()
-		logMsg(id, "picked up RIGHT fork")
+		logMsg(id, "picks up RIGHT fork")
 
 		meals++
-		logMsg(id, fmt.Sprintf("*** EATING meal %d ***", meals))
+		logMsg(id, fmt.Sprintf("*** EATS %d ***", meals))
 		time.Sleep(time.Duration(rand.Intn(3)+1) * 20 * time.Millisecond)
 
 		forks[left].Unlock()
 		forks[right].Unlock()
-		logMsg(id, "put down forks")
+		logMsg(id, "puts forks down")
 
 		waiter.Rise()
 	}
@@ -99,15 +99,15 @@ func runPhilosophers() {
 	}
 	wg.Wait()
 
-	fmt.Println("\n=== FINAL REPORT ===")
+	fmt.Println("\n=== RESULTS ===")
 	totalFails := 0
 	for i := 0; i < numPhilosophers; i++ {
 		fmt.Printf("Philosopher %d failed to eat: %d times\n", i, failures[i])
 		totalFails += failures[i]
 	}
 	if totalFails == 0 {
-		fmt.Println("Fairness: system was perfectly fair — no philosopher starved.")
+		fmt.Println("System was fair — no philosopher starved.")
 	} else {
-		fmt.Printf("Fairness: total failures = %d (waiter ensures no permanent starvation)\n", totalFails)
+		fmt.Printf("Total failures = %d (waiter ensures no permanent starvation)\n", totalFails)
 	}
 }

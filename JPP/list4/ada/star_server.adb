@@ -40,7 +40,7 @@ procedure Star_Server is
       begin return Counts (Id); end Get;
    end Recv_Counter;
 
-   -- Barrier: main blocks until all users finish
+   -- Main block until all users finish
    protected Barrier is
       procedure Signal;
       entry Wait_All;
@@ -60,19 +60,18 @@ procedure Star_Server is
       Content : Integer;
    end record;
 
-   -- User receiver task: only accepts deliveries and Done signal
+   -- User receiver task - accepts message deliveries and Done signal
    task type Receiver_Task is
       entry Start   (Id : Integer);
       entry Deliver (M  : Message);
       entry Done;
    end Receiver_Task;
 
-   -- Server task
    task Server is
       entry Send (M : Message);
    end Server;
 
-   -- Sender task: one per user, sends Msgs_Per_User messages then exits
+   -- Sender task - one per user - sends Msgs_Per_User messages then exits
    task type Sender_Task is
       entry Start (Id : Integer);
    end Sender_Task;
@@ -88,18 +87,18 @@ procedure Star_Server is
       while Relayed < Total loop
          accept Send (M : Message) do Msg := M; end Send;
          Logger.Log ("SERVER",
-                     "relaying from " & UName (Msg.From) &
+                     "relaying msg "  & UName (Msg.From) &
                      " to "           & UName (Msg.To_User) &
-                     " (seq="         & Integer'Image (Msg.Content) & ")");
+                     " (content="     & Integer'Image (Msg.Content) & ")");
          Receivers (Msg.To_User).Deliver (Msg);
          Recv_Counter.Increment (Msg.To_User);
          Relayed := Relayed + 1;
       end loop;
-      Logger.Log ("SERVER", "all messages delivered, signalling receivers.");
+      Logger.Log ("SERVER", "all messages delivered, closing receivers.");
       for I in 0 .. Num_Users - 1 loop
          Receivers (I).Done;
       end loop;
-      Logger.Log ("SERVER", "shutdown complete.");
+      Logger.Log ("SERVER", "shutdown");
    end Server;
 
    task body Receiver_Task is
@@ -114,7 +113,7 @@ procedure Star_Server is
             accept Deliver (M : Message) do Msg := M; end Deliver;
             Logger.Log (UName (My_Id),
                         "received from " & UName (Msg.From) &
-                        " (seq=" & Integer'Image (Msg.Content) & ")");
+                        " (content=" & Integer'Image (Msg.Content) & ")");
          or
             accept Done;
             Running := False;
@@ -133,14 +132,14 @@ procedure Star_Server is
          delay Duration (Float (Rand_Int.Random (Gen) mod 4 + 1) * 0.03);
          Dest := Rand_Int.Random (Gen) mod Num_Users;
          Logger.Log (UName (My_Id),
-                     "sending msg #" & Integer'Image (Seq) &
+                     "sending msg (content=" & Integer'Image (Seq) & ")" &
                      " to " & UName (Dest));
          Server.Send ((From => My_Id, To_User => Dest, Content => Seq));
       end loop;
       Logger.Log (UName (My_Id), "finished sending.");
    end Sender_Task;
 
-   -- Senders are declared after Receivers so they can reference Server
+   -- Senders declared after Receivers - they can reference Server
    Senders : array (0 .. Num_Users - 1) of Sender_Task;
 
 begin
@@ -158,7 +157,7 @@ begin
    Barrier.Wait_All;
 
    Put_Line ("");
-   Put_Line ("=== FINAL REPORT ===");
+   Put_Line ("=== RESULTS ===");
    for I in 0 .. Num_Users - 1 loop
       Put (UName (I) & " received: ");
       Put (Recv_Counter.Get (I), Width => 1);

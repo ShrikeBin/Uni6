@@ -2,23 +2,16 @@ import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Dining Philosophers — Java implementation.
- * Deadlock prevention: Waiter semaphore limits concurrent diners to N-1.
- * Starvation prevention: fair=true semaphores give FIFO ordering.
- */
 public class Philosophers {
 
     static final int NUM_PHILOSOPHERS = 5;
     static final int MEALS_EACH       = 25;
 
-    // Waiter: at most N-1 philosophers seated simultaneously
+    // Waiter: at most N-1 philosophers seated at the time - prevents all waiting for RIGHT or LEFT work at the same time
     static final Semaphore waiter = new Semaphore(NUM_PHILOSOPHERS - 1, true);
 
-    // Each fork is a fair binary semaphore
     static final Semaphore[] forks = new Semaphore[NUM_PHILOSOPHERS];
 
-    // Failure counters
     static final AtomicInteger[] failures = new AtomicInteger[NUM_PHILOSOPHERS];
 
     static final Object logLock = new Object();
@@ -47,37 +40,32 @@ public class Philosophers {
             int localFails = 0;
 
             while (meals < MEALS_EACH) {
-                // Think
                 log(id, "is thinking...");
                 sleep(rng.nextInt(3) + 1);
 
-                // Ask waiter
                 log(id, "is hungry, waiting for seat...");
                 try {
                     waiter.acquire();
                 } catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
 
-                // Pick up forks
                 try {
                     forks[left].acquire();
-                    log(id, "picked up LEFT fork");
+                    log(id, "picks up LEFT fork");
                     forks[right].acquire();
-                    log(id, "picked up RIGHT fork");
+                    log(id, "picks up RIGHT fork");
                 } catch (InterruptedException e) {
                     waiter.release();
                     Thread.currentThread().interrupt();
                     return;
                 }
 
-                // Eat
                 meals++;
-                log(id, "*** EATING meal " + meals + " ***");
+                log(id, "*** EATS " + meals + " ***");
                 sleep(rng.nextInt(3) + 1);
 
-                // Put down forks
                 forks[left].release();
                 forks[right].release();
-                log(id, "put down forks");
+                log(id, "puts forks down");
 
                 waiter.release();
             }
@@ -110,7 +98,7 @@ public class Philosophers {
         }
         for (Thread t : threads) t.join();
 
-        System.out.println("\n=== FINAL REPORT ===");
+        System.out.println("\n=== RESULTS ===");
         int total = 0;
         for (int i = 0; i < NUM_PHILOSOPHERS; i++) {
             int f = failures[i].get();
@@ -118,8 +106,8 @@ public class Philosophers {
             total += f;
         }
         if (total == 0)
-            System.out.println("Fairness: perfectly fair — no philosopher starved.");
+            System.out.println("Fair — no philosopher starved.");
         else
-            System.out.println("Fairness: waiter ensures no permanent starvation. Total failures: " + total);
+            System.out.println("Waiter ensures no permanent starvation. Total failures: " + total);
     }
 }
