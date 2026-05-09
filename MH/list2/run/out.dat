@@ -2,7 +2,7 @@
 Loaded file: ../data/egypt.tsp | Number of vertices (n): 7146
 
 
-Finished ../data/egypt.tsp in 0.000001512999999999999956 seconds.
+Finished ../data/egypt.tsp in 0.000001441999999999999916 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/djibouti.tsp | Number of vertices (n): 38
@@ -10,22 +10,22 @@ Loaded file: ../data/djibouti.tsp | Number of vertices (n): 38
 
 ====================[BEST TABU]=====================
 City: ../data/djibouti.tsp (38)
-Average Solution value: 6686
-Max Iterations w/no improvement: 4000
-Tabu list expire cooldown: 3
-Sample size for 2-opt: 38
+Average Solution value: 7275
+Max Iterations w/no improvement: 1000
+Tabu list expire cooldown: 5
+Sample size for 2-opt: 19
 
 
 ====================[BEST ANNEALING]=====================
 City: ../data/djibouti.tsp (38)
-Average Solution value: 6927
-Max epochs w/no improvement: 1140
-Tries per epoch: 10
-Cooling rate: 0.989999999999999991118216
-Init Temp: 380.000000000000000000000000
+Average Solution value: 7101
+Max epochs w/no improvement: 190
+Tries per epoch: 19
+Cooling rate: 0.849999999999999977795540
+Init Temp: 1000.000000000000000000000000
 
 
-Finished ../data/djibouti.tsp in 2.692431851999999903313210 seconds.
+Finished ../data/djibouti.tsp in 0.727833193000000044925457 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/quatar.tsp | Number of vertices (n): 194
@@ -33,34 +33,34 @@ Loaded file: ../data/quatar.tsp | Number of vertices (n): 194
 
 ====================[BEST TABU]=====================
 City: ../data/quatar.tsp (194)
-Average Solution value: 9916
-Max Iterations w/no improvement: 4000
-Tabu list expire cooldown: 10
-Sample size for 2-opt: 194
+Average Solution value: 10766
+Max Iterations w/no improvement: 1000
+Tabu list expire cooldown: 13
+Sample size for 2-opt: 97
 
 
 ====================[BEST ANNEALING]=====================
 City: ../data/quatar.tsp (194)
-Average Solution value: 10605
-Max epochs w/no improvement: 5820
-Tries per epoch: 13
-Cooling rate: 0.849999999999999977795540
-Init Temp: 194.000000000000000000000000
+Average Solution value: 10484
+Max epochs w/no improvement: 970
+Tries per epoch: 97
+Cooling rate: 0.900000000000000022204460
+Init Temp: 1000.000000000000000000000000
 
 
-Finished ../data/quatar.tsp in 18.640173649000001177000740 seconds.
+Finished ../data/quatar.tsp in 8.832621085999999621662937 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/tanzania.tsp | Number of vertices (n): 6117
 
 
-Finished ../data/tanzania.tsp in 0.000000210000000000000001 seconds.
+Finished ../data/tanzania.tsp in 0.000000179999999999999997 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/irleand.tsp | Number of vertices (n): 8246
 
 
-Finished ../data/irleand.tsp in 0.000000210999999999999997 seconds.
+Finished ../data/irleand.tsp in 0.000000179999999999999997 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/westernsahara.tsp | Number of vertices (n): 29
@@ -68,22 +68,22 @@ Loaded file: ../data/westernsahara.tsp | Number of vertices (n): 29
 
 ====================[BEST TABU]=====================
 City: ../data/westernsahara.tsp (29)
-Average Solution value: 27703
-Max Iterations w/no improvement: 4000
+Average Solution value: 29665
+Max Iterations w/no improvement: 1000
 Tabu list expire cooldown: 3
-Sample size for 2-opt: 29
+Sample size for 2-opt: 14
 
 
 ====================[BEST ANNEALING]=====================
 City: ../data/westernsahara.tsp (29)
-Average Solution value: 28256
-Max epochs w/no improvement: 870
-Tries per epoch: 10
+Average Solution value: 28561
+Max epochs w/no improvement: 145
+Tries per epoch: 14
 Cooling rate: 0.989999999999999991118216
-Init Temp: 1000.000000000000000000000000
+Init Temp: 290.000000000000000000000000
 
 
-Finished ../data/westernsahara.tsp in 1.994901253999999957144951 seconds.
+Finished ../data/westernsahara.tsp in 0.534127735999999964100482 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/oman.tsp | Number of vertices (n): 1979
@@ -91,28 +91,28 @@ Loaded file: ../data/oman.tsp | Number of vertices (n): 1979
 
 ====================[BEST TABU]=====================
 City: ../data/oman.tsp (1979)
-Average Solution value: 97660
-Max Iterations w/no improvement: 4000
-Tabu list expire cooldown: 7
-Sample size for 2-opt: 1979
+Average Solution value: 107990
+Max Iterations w/no improvement: 1000
+Tabu list expire cooldown: 10
+Sample size for 2-opt: 989
 
 
 ====================[BEST ANNEALING]=====================
 City: ../data/oman.tsp (1979)
-Average Solution value: 127510
-Max epochs w/no improvement: 59370
-Tries per epoch: 44
-Cooling rate: 0.800000000000000044408921
-Init Temp: 3958.000000000000000000000000
+Average Solution value: 98769
+Max epochs w/no improvement: 9895
+Tries per epoch: 989
+Cooling rate: 0.949999999999999955591079
+Init Temp: 19790.000000000000000000000000
 
 
-Finished ../data/oman.tsp in 1074.307045016000074610929005 seconds.
+Finished ../data/oman.tsp in 1098.352599905000033686519600 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/canada.tsp | Number of vertices (n): 4663
 
 
-Finished ../data/canada.tsp in 0.000000210999999999999997 seconds.
+Finished ../data/canada.tsp in 0.000000370000000000000004 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/uruguay.tsp | Number of vertices (n): 734
@@ -120,22 +120,22 @@ Loaded file: ../data/uruguay.tsp | Number of vertices (n): 734
 
 ====================[BEST TABU]=====================
 City: ../data/uruguay.tsp (734)
-Average Solution value: 87820
-Max Iterations w/no improvement: 4000
+Average Solution value: 100244
+Max Iterations w/no improvement: 1000
 Tabu list expire cooldown: 6
-Sample size for 2-opt: 734
+Sample size for 2-opt: 367
 
 
 ====================[BEST ANNEALING]=====================
 City: ../data/uruguay.tsp (734)
-Average Solution value: 98509
-Max epochs w/no improvement: 22020
-Tries per epoch: 27
-Cooling rate: 0.989999999999999991118216
-Init Temp: 1468.000000000000000000000000
+Average Solution value: 90216
+Max epochs w/no improvement: 3670
+Tries per epoch: 367
+Cooling rate: 0.849999999999999977795540
+Init Temp: 7340.000000000000000000000000
 
 
-Finished ../data/uruguay.tsp in 118.976641369000006420719728 seconds.
+Finished ../data/uruguay.tsp in 110.309323067999997647348209 seconds.
 ------------------------------------------
 ------------------------------------------
 Loaded file: ../data/zimbabwe.tsp | Number of vertices (n): 929
@@ -143,20 +143,20 @@ Loaded file: ../data/zimbabwe.tsp | Number of vertices (n): 929
 
 ====================[BEST TABU]=====================
 City: ../data/zimbabwe.tsp (929)
-Average Solution value: 105592
-Max Iterations w/no improvement: 4000
-Tabu list expire cooldown: 10
-Sample size for 2-opt: 929
+Average Solution value: 108137
+Max Iterations w/no improvement: 1000
+Tabu list expire cooldown: 30
+Sample size for 2-opt: 464
 
 
 ====================[BEST ANNEALING]=====================
 City: ../data/zimbabwe.tsp (929)
-Average Solution value: 121611
-Max epochs w/no improvement: 27870
-Tries per epoch: 30
-Cooling rate: 0.900000000000000022204460
+Average Solution value: 108672
+Max epochs w/no improvement: 4645
+Tries per epoch: 464
+Cooling rate: 0.949999999999999955591079
 Init Temp: 1858.000000000000000000000000
 
 
-Finished ../data/zimbabwe.tsp in 172.068165483999990783559042 seconds.
+Finished ../data/zimbabwe.tsp in 179.141863916000005474415957 seconds.
 ------------------------------------------
