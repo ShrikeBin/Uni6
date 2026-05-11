@@ -1,0 +1,94 @@
+# Lista 2 - Algorytmy Metaheurystyczne
+
+Dla każdego zbioru danych:
+- wygenerowano losowe permutacje początkowe,
+- przeprowadzono **Tabu Search** oraz **Symulowane Wyżarzanie**.
+
+Algorytm **Symulowanego Wyżarzania** jest zbudowany w standardowy sposób, **Tabu Search** za to przechowuje listę **inwersji** `(i,j)` a nie całych tras TSP co jest bardziej wydajne dla dużych `N`
+
+---
+
+## Przeszukiwanie parametrów
+
+### Tabu Search
+
+| Parametr | Testowane wartości |
+|---|---|
+| `cooldown` | `5`, `10`, `log(n)`, `sqrt(n)` |
+| `max_iters` | `sqrt(n)`, `100`, `1000`, `n/2` |
+| `sample_size` | `sqrt(n)`, `n/2` |
+
+### Symulowane Wyżarzanie
+
+| Parametr | Testowane wartości |
+|---|---|
+| `init_temp` | `1000`, `n`, `2n`, `10n` |
+| `cooling_rate` | `0.80`, `0.85`, `0.90`, `0.95`, `0.99` |
+| `epoch_length` | `5`, `10`, `log(n)`, `sqrt(n)`, `n/2` |
+| `max_epochs` | `sqrt(n)`, `100`, `n`, `5n` |
+
+---
+
+## Finalne parametry
+
+### Symulowane Wyżarzanie
+
+```
+ANNEALING_REPETITIONS = 50
+init_temp      = 10n
+cooling_rate   = 0.95
+epoch_length   = n/2
+max_epochs     = n/2
+```
+
+### Tabu Search
+
+```
+TABU_REPETITIONS = 50
+cooldown         = 15
+max_iters        = n/2
+sample_size      = n
+```
+
+
+## Wyniki:
+
+### Western Sahara
+![](results/westernsahara_SUMMARY.png)
+
+### Djibouti
+![](results/djibouti_SUMMARY.png)
+
+### Quatar
+![](results/quatar_SUMMARY.png)
+
+### Uruguay
+![](results/uruguay_SUMMARY.png)
+
+### Zimbabwe
+![](results/zimbabwe_SUMMARY.png)
+
+### Canada
+![](results/canada_SUMMARY.png)
+
+### Egypt
+![](results/egypt_SUMMARY.png)
+
+### Irleand
+![](results/irleand_SUMMARY.png)
+
+### Oman
+![](results/oman_SUMMARY.png)
+
+### Tanzania
+![](results/tanzania_SUMMARY.png)
+
+**Wniosek:**  
+W eksperymentach algorytm Tabu Search dawał lepsze rezultaty, możliwymi powodami może być też nieodpowiedni wybór parametrów.
+
+<br><br>
+
+<div style="text-align: right;">
+Jan Ryszkiewicz 
+282210
+</div>

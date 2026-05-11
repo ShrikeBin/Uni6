@@ -109,7 +109,6 @@ SAResult simulated_annealing(
                 std::reverse(current_tour.begin() + i, current_tour.begin() + j + 1);
                 current_dist += delta;
             } else {
-                // Accept worse solution with Boltzmann probability
                 double probability = std::exp(-static_cast<double>(delta) / temp);
                 if (prob_dist(GEN) < probability) {
                     std::reverse(current_tour.begin() + i, current_tour.begin() + j + 1);
@@ -151,8 +150,7 @@ TabuResult tabu_search(
     uint_fast32_t best_dist = current_dist;
 
     // Tabu list: tabu_list[i][j] = iteration until which move (i,j) is forbidden
-    // Using a flat tenure counter per (i,j) pair (upper triangle only)
-    // For large n a full n×n matrix is expensive but straightforward
+    // Tabu list holds inversions (i,j) as full tours would be very memory inefficient for big N
     std::vector<std::vector<uint_fast32_t>> tabu_list(n, std::vector<uint_fast32_t>(n, 0));
 
     std::uniform_int_distribution<uint_fast32_t> idx_dist(0, n - 1);
@@ -162,25 +160,31 @@ TabuResult tabu_search(
 
     while (iter_no_improve < max_iter_no_improve) {
         int_fast32_t best_delta = std::numeric_limits<int_fast32_t>::max();
-        uint_fast32_t best_i = 0, best_j = 1;
+        uint_fast32_t best_i = 0;
+        uint_fast32_t best_j = 0;
         bool found = false;
 
-        // Sample random 2-opt neighbours
         for (uint_fast32_t k = 0; k < sample_size; ++k) {
             uint_fast32_t i = idx_dist(GEN);
             uint_fast32_t j = idx_dist(GEN);
-            while (j == i) j = idx_dist(GEN);
-            if (i > j) std::swap(i, j);
+            
+            while (j == i) { 
+                j = idx_dist(GEN);
+            }
+
+            if (i > j) {
+                std::swap(i, j);
+            }
 
             bool is_tabu = (tabu_list[i][j] > iter);
 
             int_fast32_t delta = diff_after_invert(current_tour, i, j, dist_matrix);
 
-            // Aspiration: accept tabu move if it yields a new global best
-            bool aspiration = is_tabu &&
+            // tabu_override: accept tabu move if it yields a new global best
+            bool tabu_override = is_tabu &&
                 (static_cast<int_fast64_t>(current_dist) + delta < static_cast<int_fast64_t>(best_dist));
 
-            if (!is_tabu || aspiration) {
+            if (!is_tabu || tabu_override) {
                 if (delta < best_delta) {
                     best_delta = delta;
                     best_i = i;
@@ -191,7 +195,7 @@ TabuResult tabu_search(
         }
 
         if (!found) {
-            // All sampled moves tabu and none pass aspiration — just pick least-bad
+            // All sampled moves tabu and none pass aspiration — pick least bad
             for (uint_fast32_t k = 0; k < sample_size; ++k) {
                 uint_fast32_t i = idx_dist(GEN);
                 uint_fast32_t j = idx_dist(GEN);
@@ -206,12 +210,10 @@ TabuResult tabu_search(
             }
         }
 
-        // Apply the move
         std::reverse(current_tour.begin() + best_i, current_tour.begin() + best_j + 1);
         current_dist = static_cast<uint_fast32_t>(
             static_cast<int_fast64_t>(current_dist) + best_delta);
 
-        // Mark move as tabu
         tabu_list[best_i][best_j] = iter + tabu_cooldown;
 
         if (current_dist < best_dist) {
