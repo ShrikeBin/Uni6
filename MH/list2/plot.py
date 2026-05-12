@@ -136,7 +136,7 @@ def plot_results(sol: Solution, coords: np.ndarray) -> None:
 
     plt.suptitle(f"{sol.city.upper()} — Tabu vs Annealing", fontsize=16, fontweight='bold', color='#2c3e50', y=1.01)
     plt.tight_layout(rect=[0, 0.03, 1, 0.97])
-    plt.savefig(f"./results/{clean_city}_SUMMARY.png", dpi=600, bbox_inches='tight')
+    plt.savefig(f"./results/{clean_city}_SUMMARY.png", dpi=250, bbox_inches='tight')
     plt.show()
     plt.close(fig)
     plt.style.use('default')
