@@ -1,0 +1,34 @@
+[PO PRAWEJ ZNAJDUJE SIE NAZWA PINU NA ARDUINO JEŻELI NIE OKREŚLONO INACZEJ]
+
+[dodatkowo do płytki włozony jest czujnik podczerwieni]
+
+====== KÓŁKA ======
+
+RightForward   = 9
+RightBackward  = 10
+RightSpeed     = 5
+
+LeftForward    = 11
+LeftBackward   = 12
+LeftSpeed      = 6
+
+====== LED ======
+
+GND     =   GND
+VCC     =   5V
+SDA     =   SCL
+SCL     =   SDA
+
+====== PŁYTKA PRZED SERVO ======
+
+SERWO   =   3
+ECHO    =   A3
+TRIG    =   A2
+IR      =   2
+
+====== MODUŁ BT ======
+
+GND     =   GND (na płytce przed servo)
+VCC     =   5V  (na płytce przed servo)
+RXD     =   8
+TXD     =   7
