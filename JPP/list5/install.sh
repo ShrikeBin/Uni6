@@ -1,0 +1,1 @@
+sudo apt install ghc swi-prolog smlnj ocaml ocaml-findlib
