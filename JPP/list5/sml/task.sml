@@ -1,9 +1,7 @@
-(* 1. Binomial coefficient — recursive *)
 fun binomial n 0 = 1
   | binomial n k = if n = k then 1
                    else binomial (n-1) k + binomial (n-1) (k-1)
 
-(* 2. Binomial using Pascal's triangle rows *)
 fun nextRow row =
   let
     fun zipAdd []      []      = []
@@ -23,7 +21,6 @@ fun nth (x::_)  0 = x
 
 fun binomial2 n k = nth (pascalRow n) k
 
-(* 3. Merge sort *)
 fun merge [] ys = ys
   | merge xs [] = xs
   | merge (x::xs) (y::ys) =
@@ -42,13 +39,11 @@ fun mergesort [] = []
       let val (l, r) = splitList lst
       in merge (mergesort l) (mergesort r) end
 
-(* 4. Diophantine equation *)
 fun de a 0 = (1, 0, a)
   | de a b =
       let val (x', y', g) = de b (a mod b)
       in (y', x' - (a div b) * y', g) end
 
-(* 5. Prime factors *)
 fun primeFactors n =
   let
     fun go 1 _ = []
@@ -58,7 +53,6 @@ fun primeFactors n =
           else go m (f+1)
   in go n 2 end
 
-(* 6. Totient — classical *)
 fun gcd a 0 = a
   | gcd a b = gcd b (a mod b)
 
@@ -68,7 +62,6 @@ fun totient n =
       | go k acc = go (k-1) (if gcd k n = 1 then acc+1 else acc)
   in go n 0 end
 
-(* 7. Totient using prime factors *)
 fun nub [] = []
   | nub (x::xs) = x :: nub (List.filter (fn y => y <> x) xs)
 
@@ -79,7 +72,6 @@ fun totient2 1 = 1
         fun applyP acc p = acc * (p-1) div p
       in List.foldl (fn (p, acc) => applyP acc p) n ps end
 
-(* 8. Primes — sieve *)
 fun range a b = if a > b then [] else a :: range (a+1) b
 
 fun sieve [] = []

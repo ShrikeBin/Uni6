@@ -1,4 +1,18 @@
-% ─── 1. Mergesort ─────────────────────────────────────────────────────────────
+/* =========================================================================
+   Syntax Cheat Sheet (cause ya' dumb):
+     :-       -> "if but '<-' "
+     ,        -> "and"
+     .        -> End of statement
+     !        -> "Cut" (Stops searching for alternative answers/backtracking)
+     is       -> Evaluates math on the right and assigns it to a variable
+     =:=      -> Mathematically equal to (forces calculation on both sides)
+     =<       -> Less than or equal to (X =< Y)
+     //       -> Integer division (e.g., 5 // 2 = 2)
+     -> ;     -> If-Then-Else template: ( Condition -> Then_Body ; Else_Body )
+     [H|T]    -> List syntax: H is the first item (Head), T is the remainder (Tail)
+========================================================================= */
+
+
 mergesort([], []).
 mergesort([X], [X]).
 mergesort(List, Sorted) :-
@@ -21,7 +35,6 @@ merge_sorted([X|Xs], [Y|Ys], [X|Rest]) :-
 merge_sorted([X|Xs], [Y|Ys], [Y|Rest]) :-
     merge_sorted([X|Xs], Ys, Rest).
 
-% ─── 2. Diophantine equation ──────────────────────────────────────────────────
 de(A, 0, 1, 0, A) :- !.
 de(A, B, X, Y, G) :-
     R is A mod B,
@@ -29,7 +42,6 @@ de(A, B, X, Y, G) :-
     X is Y1,
     Y is X1 - (A // B) * Y1.
 
-% ─── 3. Prime factors ─────────────────────────────────────────────────────────
 prime_factors(N, Factors) :-
     prime_factors(N, 2, Factors).
 
@@ -44,7 +56,6 @@ prime_factors(N, F, Factors) :-
     F1 is F + 1,
     prime_factors(N, F1, Factors).
 
-% ─── 4. Totient ───────────────────────────────────────────────────────────────
 gcd(A, 0, A) :- !.
 gcd(A, B, G) :-
     R is A mod B,
@@ -60,7 +71,6 @@ totient(N, K, Acc, T) :-
     K1 is K - 1,
     totient(N, K1, Acc1, T).
 
-% ─── 5. Primes up to N (sieve) ────────────────────────────────────────────────
 primes(N, Primes) :-
     numlist(2, N, List),
     sieve(List, Primes).
