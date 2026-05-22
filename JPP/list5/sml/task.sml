@@ -1,3 +1,10 @@
+(*  
+    SYNTAX
+
+    ::  - add in front,
+    @   - concat 
+*)
+
 fun binomial n 0 = 1
   | binomial n k = if n = k then 1
                    else binomial (n-1) k + binomial (n-1) (k-1)
@@ -31,18 +38,21 @@ fun splitList [] = ([], [])
   | splitList [x] = ([x], [])
   | splitList (x::y::rest) =
       let val (l, r) = splitList rest
-      in (x::l, y::r) end
+      in (x::l, y::r) 
+    end
 
 fun mergesort [] = []
   | mergesort [x] = [x]
   | mergesort lst =
       let val (l, r) = splitList lst
-      in merge (mergesort l) (mergesort r) end
+      in merge (mergesort l) (mergesort r)
+    end
 
 fun de a 0 = (1, 0, a)
   | de a b =
       let val (x', y', g) = de b (a mod b)
-      in (y', x' - (a div b) * y', g) end
+      in (y', x' - (a div b) * y', g) 
+    end
 
 fun primeFactors n =
   let
@@ -51,7 +61,8 @@ fun primeFactors n =
           if f * f > m      then [m]
           else if m mod f = 0 then f :: go (m div f) f
           else go m (f+1)
-  in go n 2 end
+  in go n 2 
+  end
 
 fun gcd a 0 = a
   | gcd a b = gcd b (a mod b)
@@ -60,7 +71,8 @@ fun totient n =
   let
     fun go 0 acc = acc
       | go k acc = go (k-1) (if gcd k n = 1 then acc+1 else acc)
-  in go n 0 end
+  in go n 0
+  end
 
 fun nub [] = []
   | nub (x::xs) = x :: nub (List.filter (fn y => y <> x) xs)
@@ -70,7 +82,8 @@ fun totient2 1 = 1
       let
         val ps = nub (primeFactors n)
         fun applyP acc p = acc * (p-1) div p
-      in List.foldl (fn (p, acc) => applyP acc p) n ps end
+      in List.foldl ( fn (p, acc) => applyP acc p ) n ps 
+    end
 
 fun range a b = if a > b then [] else a :: range (a+1) b
 
