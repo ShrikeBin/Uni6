@@ -40,29 +40,22 @@ A = 2; B = 8; C = 2; D = 2; E = 1; F = 0
 
 # Zad 4 – Wielomiany wielu zmiennych i PolynomialReduce
 
-## 4a) Struktura danych
-
-Wielomian wielu zmiennych reprezentowany jest jako słownik `{monom: współczynnik}`,
-gdzie monom to krotka wykładników `(e1, e2, ..., en)` dla zmiennych `(x1, x2, ..., xn)`.
+Wielomian wielu zmiennych reprezentowany jest jako słownik `{monomian: współczynnik}`,
+gdzie monomian to *tuple* wykładników ($e_1$, $e_2$, ..., $e_n$) dla zmiennych ($x_1$, $x_2$, ..., $x_n$).
 
 Przykład: $2x^2y + 3z - 1 \leftrightarrow$ `{(2,1,0): 2, (0,0,1): 3, (0,0,0): -1}`
 
-Zalety tej reprezentacji:
-- wydajna dla wielomianów rzadkich,
-- łatwa iteracja po monomach,
-- prosta implementacja operacji arytmetycznych.
+Implementacja: \
+- jest wydajna dla wielomianów rzadkich i prosta w obsłudze. \
 
 ```{python}
-#| include: false
-from itertools import product as iproduct
+#| include: false 
 from functools import cmp_to_key
 
 class MVPoly:
-    """Wielomian wielu zmiennych nad R, reprezentowany jako dict {monom: coeff}."""
-
     def __init__(self, data, nvars=None):
         if isinstance(data, dict):
-            self.data = {k: v for k, v in data.items() if abs(v) > 1e-12}
+            self.data = {key: val for key, val in data.items() if abs(val) > 1e-12}
         else:
             self.data = {}
         if self.data:
@@ -73,9 +66,10 @@ class MVPoly:
             self.nvars = 0
 
     def _align(self, other):
+        # dodaje puste dla wyrówniania długości (jeśli jeden wielomian jest np 4 zmienncyh a drugi 7)
         n = max(self.nvars, other.nvars)
-        def pad(d, n):
-            return {k + (0,)*(n - len(k)): v for k, v in d.items()}
+        def pad(dict, n):
+            return {key  + (0,)*(n - len(key)): val for key, val in dict.items()}
         return pad(self.data, n), pad(other.data, n), n
 
     def __add__(self, other):
@@ -103,17 +97,39 @@ class MVPoly:
     def scale(self, c):
         return MVPoly({k: c*v for k, v in self.data.items()}, self.nvars)
 
+    def is_zero(self):
+        return len(self.data) == 0
+
+    def leading_monomial(self, order):
+        if not self.data:
+            return None
+        return max(self.data.keys(), key=cmp_to_key(order))
+
+    def leading_coeff(self, order):
+        lm = self.leading_monomial(order)
+        return self.data[lm] if lm is not None else 0
+
+    def leading_term(self, order):
+        lm = self.leading_monomial(order)
+        if lm is None:
+            return MVPoly({}, self.nvars)
+        return MVPoly({lm: self.data[lm]}, self.nvars)
+
+    def _to_sub(self, n):
+        SUB = "₀₁₂₃₄₅₆₇₈₉"
+        return "".join(SUB[int(d)] for d in str(n))
+
     def __str__(self):
         if not self.data:
             return "0"
-        var_names = ['x','y','z','w'] + [f'x{i}' for i in range(4, self.nvars)]
+        var_names = ['x', 'y', 'z'] + [f'x_{i}' for i in range(4, self.nvars)]
         terms = []
         for mon, coef in sorted(self.data.items(), key=lambda x: x[0], reverse=True):
             if abs(coef) < 1e-12:
                 continue
             coef_str = f"{coef:.6g}"
             mon_str = "".join(
-                (f"{var_names[i]}^{e}" if e > 1 else var_names[i])
+                (f"[{var_names[i]}^{e}]" if e > 1 else f"[{var_names[i]}]")
                 for i, e in enumerate(mon) if e > 0
             )
             if mon_str == "":
@@ -133,49 +149,23 @@ class MVPoly:
             else:
                 result += f" + {t}"
         return result
-
-    def is_zero(self):
-        return len(self.data) == 0
-
-    def leading_monomial(self, order):
-        if not self.data:
-            return None
-        return max(self.data.keys(), key=cmp_to_key(order))
-
-    def leading_coeff(self, order):
-        lm = self.leading_monomial(order)
-        return self.data[lm] if lm is not None else 0
-
-    def leading_term(self, order):
-        lm = self.leading_monomial(order)
-        if lm is None:
-            return MVPoly({}, self.nvars)
-        return MVPoly({lm: self.data[lm]}, self.nvars)
-
-def mono(exponents):
-    return MVPoly({tuple(exponents): 1})
-
-def const(c, nvars):
-    return MVPoly({(0,)*nvars: c}, nvars)
 ```
 
-## 4b) Porządki na monomach
+----
 
-Zaimplementowano trzy porządki:
+Zaimplementowane są trzy porządki:
 
-**Lex (leksykograficzny):** porównuje wykładniki zmiennych kolejno od lewej; $x^\alpha >_{\text{lex}} x^\beta$ gdy pierwsza niezerowa różnica $\alpha_i - \beta_i > 0$. Zmienne są całkowicie uporządkowane: $x_1 \succ x_2 \succ \cdots$
+**Lex:** porównuje wykładniki zmiennych kolejno od lewej: ${x_{i}}^\alpha >_{\text{lex}} {x_{i}}^\beta$ na zasadzie porównania wykładników $\alpha > \beta$. Zmienne są silnie uporządkowane: $x_1 \succ x_2 \succ \cdots$
 
-**Permutowany Lex:** jak Lex, ale kolejność zmiennych zadana przez permutację $\pi$. Różne $\pi$ dają różne wyniki redukcji – jest to kluczowy parametr porządku.
+**Perm Lex:** identyczne jak Lex, ale kolejność zmiennych zadana przez permutację $\pi$. Różne $\pi$ dają różne wyniki porządku. Permutacja daje nam nową hierarchię zmiennych (tj zamiast $x_1 \succ x_2 \succ \cdots$ możemy mieć $x_7 \succ x_n \succ \cdots$)
 
-**GradedLex (grlex):** najpierw porównuje sumy wykładników (stopień), przy remisie używa Lex. $x^\alpha >_{\text{grlex}} x^\beta$ gdy $|\alpha| > |\beta|$, lub $|\alpha| = |\beta|$ i $\alpha >_{\text{lex}} \beta$.
-
-**Różnice:** Lex preferuje eliminację zmiennych o wyższym priorytecie niezależnie od stopnia. GradedLex preferuje monomy wyższego stopnia – bardziej naturalny dla teorii baz Gröbnera. Permutowany Lex pozwala sterować, która zmienna jest „najważniejsza".
+**GradedLex:** najpierw porównuje sumy wszystkich wykładników $\sum_{i=1}^{n} \alpha_{ij}$ gdzie nasz monomian to $\prod_{i=1}^{n} x_i^{a_{i}}$, przy remisie używa porządku Lex.
 
 ```{python}
 def lex_order(perm=None):
-    """Porządek leksykograficzny, opcjonalnie z permutacją zmiennych."""
     def cmp(a, b):
         n = max(len(a), len(b))
+        # Równanie długości (jeśli a jest np dwóch zmiennych a b trzech)
         a = a + (0,)*(n-len(a))
         b = b + (0,)*(n-len(b))
         idx = perm if perm is not None else list(range(n))
@@ -185,32 +175,24 @@ def lex_order(perm=None):
         return 0
     return cmp
 
-def grlex_order():
-    """Porządek GradedLex."""
+def gradlex_order():
+    _lex_cmp = lex_order()
     def cmp(a, b):
-        n = max(len(a), len(b))
-        a = a + (0,)*(n-len(a))
-        b = b + (0,)*(n-len(b))
         sa, sb = sum(a), sum(b)
         if sa > sb: return 1
         if sa < sb: return -1
-        for ai, bi in zip(a, b):
-            if ai > bi: return 1
-            if ai < bi: return -1
-        return 0
+        return _lex_cmp(a, b)
     return cmp
 ```
 
-## 4c) PolynomialReduce
+----
 
-Algorytm: w każdym kroku szukamy pierwszego $g_i$ z ciągu, którego wiodący monom dzieli wiodący monom aktualnego $f$. Jeśli taki istnieje – odejmujemy odpowiedni wielokrotność $g_i$ i zwiększamy $\alpha_i$. Jeśli żaden nie dzieli – wiodący monom trafia do reszty.
+Algorytm PolynomialReduce: 
+
+W każdym kroku szukamy pierwszego $g_i$ z ciągu, którego wiodący monomian dzieli wiodący monomian aktualnego $f$. Jeśli taki istnieje – odejmujemy odpowiedni wielokrotność $g_i$ i zwiększamy $\alpha_i$. Jeśli żaden nie dzieli – wiodący monomian trafia do reszty.
 
 ```{python}
 def poly_divide(f, divisors, order):
-    """
-    Kluczowy fragment: PolynomialReduce(f, [g1,...,gn], order)
-    Zwraca (alphas, r) takie że f = sum(alpha_i * g_i) + r
-    """
     n = len(divisors)
     alphas = [MVPoly({}, f.nvars) for _ in range(n)]
     r = MVPoly({}, f.nvars)
@@ -223,18 +205,15 @@ def poly_divide(f, divisors, order):
         for i, gi in enumerate(divisors):
             lm_g = gi.leading_monomial(order)
             lc_g = gi.leading_coeff(order)
-            # Sprawdź czy lm(gi) | lm(p)
             if all(lm_p[j] >= lm_g[j] for j in range(len(lm_g))):
-                # Monom ilorazu: lm(p) / lm(gi)
-                q_mon = tuple(lm_p[j] - lm_g[j] for j in range(len(lm_p)))
-                q_coef = lc_p / lc_g
+                q_mon = tuple(lm_p[j] - lm_g[j] for j in range(len(lm_p))) # redukcja potęg
+                q_coef = lc_p / lc_g                                       # dzielenie współczynników
                 q_term = MVPoly({q_mon: q_coef}, p.nvars)
                 alphas[i] = alphas[i] + q_term
                 p = p - q_term * gi
                 divided = True
                 break
-        if not divided:
-            # Wiodący monom do reszty
+        if not divided: # nic nie podzieliło
             lt_p = p.leading_term(order)
             r = r + lt_p
             p = p - lt_p
@@ -242,11 +221,13 @@ def poly_divide(f, divisors, order):
     return alphas, r
 ```
 
-## 4d) Ćw. 37 – redukcja i kolejność dzielników
+----
+
+Ćw. 37 – redukcja i kolejność dzielników:
 
 ```{python}
 #| echo: false
-grlex = grlex_order()
+grlex = gradlex_order()
 
 # f = x^3 + x^2*y + x^2*z
 f37 = MVPoly({(3,0,0):1, (2,1,0):1, (2,0,1):1})
@@ -272,23 +253,30 @@ print(f"  alpha1 = {alphas2[0]},  alpha2 = {alphas2[1]}")
 print(f"  r2 = {r2}")
 print()
 
-# Sprawdź czy r1 - r2 należy do ideału <g1, g2>
+# czy r1 - r2 należy do <g1, g2>
 diff = r1 - r2
 print(f"r1 - r2 = {diff}")
 ```
 
-Reszty $r_1 \neq r_2$, ponieważ algorytm jest zachłanny – wybiera **pierwszy** dzielnik z ciągu, którego wiodący monom dzieli wiodący monom $f$. Przy kolejności $(g_1, g_2)$ priorytet ma $g_1$, co prowadzi do innej ścieżki redukcji niż przy $(g_2, g_1)$.
+Reszty $r_1 \neq r_2$ - algorytm jest zachłanny – wybiera **pierwszy** dzielnik z ciągu, którego wiodący monomian dzieli wiodący monomian $f$. Przy kolejności $(g_1, g_2)$ priorytet ma $g_1$, co prowadzi do innej redukcji niż przy $(g_2, g_1)$.
 
-Różnica $r_1 - r_2$ należy do ideału $\langle g_1, g_2 \rangle$ (bo $f = \sum \alpha_i g_i + r_i$ dla obu przypadków, więc $r_1 - r_2 = \sum(\alpha_i^{(2)} - \alpha_i^{(1)})g_i$), ale żadna z reszt sama w sobie nie musi być kanoniczna. To motywuje potrzebę baz Gröbnera.
+Różnica $r_1 - r_2$ należy do ideału $\langle g_1, g_2 \rangle$ ponieważ: \
+$f = \alpha_1g_1 + \alpha_2g_2 + r_1$, \
+$f = \beta_1g_1 + \beta_2g_2 + r_2$, 
 
-## 4e) Trzy różne wyniki dla $h(x,y,z)$
+więc: \
+$\alpha_1g_1 + \alpha_2g_2 + r_1 = \beta_1g_1 + \beta_2g_2 + r_2$, 
+
+i: \
+$r_1 - r_2 = (\beta_1 - \alpha_1)g_1 + (\beta_2 - \alpha_2)g_2$
+
+----
 
 Niech $h(x,y,z) = x^a y^b + y^c z^d + x^e z^f = x^2 y^8 + y^2 z^2 + xz^0 = x^2y^8 + y^2z^2 + x$.
 
 ```{python}
 #| echo: false
-# h(x,y,z) = x^A * y^B + y^C * z^D + x^E * z^F
-# = x^2 y^8 + y^2 z^2 + x^1 z^0
+# h(x,y,z) = x^2 y^8 + y^2 z^2 + x^1
 h = MVPoly({
     (A, B, 0): 1,
     (0, C, D): 1,
@@ -297,16 +285,13 @@ h = MVPoly({
 print("h(x,y,z) =", h)
 print()
 
-# Dobieramy G tak żeby każdy porządek "widział" inny LT(h) jako redukowalny
-# g_x redukuje x^2y^8 (LT w lex x>y>z)
-g_x = MVPoly({(2,1,0):1, (0,0,0):-1})   # x^2*y - 1
-# g_y redukuje y^8 gdy y>x>z
-g_y = MVPoly({(0,2,0):1, (0,0,0):-1})   # y^2 - 1
-# g_z redukuje y^2z^2 gdy z>y>x (grlex też)
-g_z = MVPoly({(0,0,1):1, (0,0,0):-1})   # z - 1
 
-G = [g_x, g_y, g_z]
-print("G = [g_x, g_y, g_z] =", [str(g) for g in G])
+g_1 = MVPoly({(2,1,0):1, (0,0,1):-1})   # x^2y - z
+g_2 = MVPoly({(0,2,1):1, (1,0,0):-1})   # y^2z - x
+g_3 = MVPoly({(0,2,2):1, (2,0,0):-1})   # y^2z^2 - x
+
+G = [g_1, g_2, g_3]
+print("G = [g_1, g_2, g_3] =", [str(g) for g in G])
 print()
 
 # Porządek 1: Lex x > y > z  (standardowy)
@@ -314,13 +299,13 @@ lex_xyz = lex_order([0,1,2])
 a1, r1e = poly_divide(h, G, lex_xyz)
 print("Lex (x>y>z):  r =", r1e)
 
-# Porządek 2: Lex y > x > z
-lex_yxz = lex_order([1,0,2])
+# Porządek 2: Lex z > y > x
+lex_yxz = lex_order([2,1,0])
 a2, r2e = poly_divide(h, G, lex_yxz)
 print("Lex (y>x>z):  r =", r2e)
 
 # Porządek 3: GradedLex
-grlex2 = grlex_order()
+grlex2 = gradlex_order()
 a3, r3e = poly_divide(h, G, grlex2)
 print("GradedLex:    r =", r3e)
 
@@ -328,87 +313,131 @@ print()
 print("Wyniki różne:", str(r1e) != str(r2e) or str(r2e) != str(r3e))
 ```
 
-**Wyjaśnienie różnic:** Każdy porządek wskazuje inny wiodący monom $h$:
-
-- **Lex $x \succ y \succ z$:** LT$(h) = x^2y^8$ – redukowany przez $g_x = x^2y - 1$.
-- **Lex $y \succ x \succ z$:** LT$(h) = x^2y^8$ (wciąż, bo $y$-wykładnik dominuje), ale kolejność dzielników zmienia ścieżkę redukcji.
-- **GradedLex:** LT$(h) = x^2y^8$ (stopień 10, największy), lecz po jego redukcji kolejne kroki przebiegają inaczej niż w czystym Lex ze względu na porównywanie stopni.
-
-Różne porządki zmieniają, który monom jest „największy" w każdym kroku, co prowadzi do różnych ścieżek i różnych reszt.
+Różne porządki zmieniają, który monomian jest „największy" w każdym kroku, co prowadzi do różnych ścieżek i różnych reszt.
+Dobrałem wielomiany $g_1, g_2, g_3$ tak aby każdy porządek zwracał inny wiodący monomian.
 
 ---
 
 # Zad 5 – Chryzantema (Quadrifolium i kamon cesarski)
 
-## Jednopłatkowa chryzantema (wersja z paszportu)
 
 Quadrifolium (czterolistna koniczyna) zadane jest równaniem biegunowym:
-$$r = \cos(2\theta), \quad \theta \in [0, 2\pi)$$
+$r = \cos(2\theta), \quad \theta \in [0, 2\pi)$
 
 Chryzantema z godła japońskiego (kamon cesarski) to **16-płatkowy złocień**.
 Wzór biegunowy:
-$$r = \cos(8\theta), \quad \theta \in [0, 2\pi)$$
+$r = \cos(8\theta), \quad \theta \in [0, 2\pi)$
 daje 16 płatków (dla parzystej liczby $n$: $r = \cos(n\theta)$ daje $2n$ płatków, tu $n=8$).
 
 ```{python}
 #| echo: false
+
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
-theta = np.linspace(0, 2*np.pi, 4000)
+theta = np.linspace(0, 2*np.pi, 6000)
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
 
-# --- wersja pojedyncza (16 płatków) ---
+# =========================================================
+# wersja pojedyncza — bardziej zaokrąglone płatki
+# =========================================================
+
 ax = axes[0]
-r = np.cos(8 * theta)
+
+r = np.abs(np.cos(8 * theta))**0.1
+
 x = r * np.cos(theta)
 y = r * np.sin(theta)
-ax.plot(x, y, color='#c8102e', linewidth=1.5)
+
+ax.plot(x, y, color='#c8102e', linewidth=0.5)
 ax.fill(x, y, color='#c8102e', alpha=0.25)
+
 ax.set_aspect('equal')
-ax.set_title(r'$r = \cos(8\theta)$ – 16 płatków (wersja pojedyncza)')
+ax.set_title(
+    r'$r = |\cos(8\theta)|^{0.1}$'
+    '\n16 płatków — zaokrąglone końce'
+)
+
 ax.axis('off')
 
-# --- wersja podwójna (zewnętrzna + wewnętrzna) ---
+# =========================================================
+# wersja podwójna — druga warstwa obrócona o 15°
+# =========================================================
+
 ax2 = axes[1]
-for scale, alpha, lw in [(1.0, 0.18, 1.5), (0.6, 0.30, 1.2)]:
-    r2 = scale * np.cos(8 * theta)
-    x2 = r2 * np.cos(theta)
-    y2 = r2 * np.sin(theta)
-    ax2.plot(x2, y2, color='#c8102e', linewidth=lw)
-    ax2.fill(x2, y2, color='#c8102e', alpha=alpha)
+
+rotation = np.deg2rad(35)
+
+r_inner = np.abs(np.cos(8 * (theta - rotation)))**0.1
+
+x_inner = r_inner * np.cos(theta)
+y_inner = r_inner * np.sin(theta)
+
+ax2.plot(x_inner, y_inner,
+         color='#c8102e',
+         linewidth=1.2)
+
+ax2.fill(x_inner, y_inner,
+         color='#c8102e',
+         alpha=1)
+
+r_outer = np.abs(np.cos(8 * theta))**0.1
+
+x_outer = r_outer * np.cos(theta)
+y_outer = r_outer * np.sin(theta)
+
+ax2.plot(x_outer, y_outer,
+         color='#580a17',
+         linewidth=1.5)
+
+ax2.fill(x_outer, y_outer,
+         color='#c8102e',
+         alpha=1)
+
 ax2.set_aspect('equal')
-ax2.set_title(r'$r = \cos(8\theta)$, $r = 0.6\cos(8\theta)$ – wersja podwójna')
+
+ax2.set_title(
+    r'$35^\circ$ obrotu'
+    '\nwersja podwójna'
+)
+
 ax2.axis('off')
 
 plt.tight_layout()
-plt.savefig('chrysanthemum.pdf', bbox_inches='tight', dpi=150)
-plt.show()
-print("Wzór: r = cos(8θ), θ ∈ [0, 2π)")
-```
 
-## Reprezentacja algebraiczna
+plt.savefig(
+    'chrysanthemum.pdf',
+    bbox_inches='tight',
+    dpi=200
+)
+
+plt.show()
+```
 
 Podstawiając $x = r\cos\theta$, $y = r\sin\theta$ oraz $r^2 = x^2 + y^2$, z równania $r = \cos(n\theta)$ uzyskujemy równanie algebraiczne.
 
 Dla $r = \cos(2\theta)$ (quadrifolium, 4 płatki):
-$$r = \cos^2\theta - \sin^2\theta = \frac{x^2 - y^2}{r}$$
-$$r^2 = x^2 - y^2 \implies (x^2+y^2)^2 = x^2 - y^2$$
+$r = \cos^2\theta - \sin^2\theta = \frac{x^2 - y^2}{r}$
 
+$r^2 = x^2 - y^2 \implies (x^2+y^2)^2 = x^2 - y^2$
+
+
+### TU WEŹ TAK SPRAWDŹ JESZCZE
 Dla ogólnego $r = \cos(n\theta)$ wyrażamy $\cos(n\theta)$ wielomianem Czebyszewa $T_n$ z $\cos\theta = x/r$:
-$$r \cdot r^n = r^n T_n(x/r) \implies r^{n+1} = \text{(wielomian stopnia } n \text{ w } x, y)$$
+
+$r \cdot r^n = r^n T_n(x/r) \implies r^{n+1} = \text{(wielomian stopnia } n \text{ w } x, y)$
 
 Dla $n = 8$ (chryzantema):
-$$\left(x^2+y^2\right)^{9/2} = T_8\!\left(\frac{x}{\sqrt{x^2+y^2}}\right)\cdot(x^2+y^2)^4$$
+$\left(x^2+y^2\right)^{9/2} = T_8\!\left(\frac{x}{\sqrt{x^2+y^2}}\right)\cdot(x^2+y^2)^4$
 
 Po wyłączeniu $(x^2+y^2)^4$ i podstawieniu $T_8$ (wielomian Czebyszewa stopnia 8) otrzymujemy:
-$$(x^2+y^2)^9 = \bigl[T_8(x/r)\cdot r^8\bigr]^2, \quad r = \sqrt{x^2+y^2}$$
+
+$(x^2+y^2)^9 = \bigl[T_8(x/r)\cdot r^8\bigr]^2, \quad r = \sqrt{x^2+y^2}$
 
 Konkretnie, $T_8(t) = 128t^8 - 256t^6 + 160t^4 - 32t^2 + 1$, więc krzywa algebraiczna to:
 
-$$\left(x^2+y^2\right)^9 = \left(128x^8 - 256x^6(x^2+y^2) + 160x^4(x^2+y^2)^2 - 32x^2(x^2+y^2)^3 + (x^2+y^2)^4\right)^2$$
+$\left(x^2+y^2\right)^9 = \left(128x^8 - 256x^6(x^2+y^2) + 160x^4(x^2+y^2)^2 - 32x^2(x^2+y^2)^3 + (x^2+y^2)^4\right)^2$
 
 Jest to rozmaitość algebraiczna stopnia 18 w $\mathbb{R}^2$ (bądź $\mathbb{C}^2$), zdefiniowana przez zerowanie powyższego wielomianu.
 
