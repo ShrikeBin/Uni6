@@ -12,7 +12,7 @@ format:
     include-in-header:
       text: |
         \setlength{\parindent}{0pt}
-        \setlength{\parskip}{4pt}
+        \setlength{\parskip}{8pt}
         \usepackage{etoolbox}
         \makeatletter
         \renewcommand{\section}{\@startsection{section}{1}{\z@}%
@@ -206,8 +206,10 @@ def poly_divide(f, divisors, order):
             lm_g = gi.leading_monomial(order)
             lc_g = gi.leading_coeff(order)
             if all(lm_p[j] >= lm_g[j] for j in range(len(lm_g))):
-                q_mon = tuple(lm_p[j] - lm_g[j] for j in range(len(lm_p))) # redukcja potęg
-                q_coef = lc_p / lc_g                                       # dzielenie współczynników
+                # redukcja potęg
+                q_mon = tuple(lm_p[j] - lm_g[j] for j in range(len(lm_p)))
+                # dzielenie współczynników
+                q_coef = lc_p / lc_g
                 q_term = MVPoly({q_mon: q_coef}, p.nvars)
                 alphas[i] = alphas[i] + q_term
                 p = p - q_term * gi
@@ -325,9 +327,14 @@ Quadrifolium (czterolistna koniczyna) zadane jest równaniem biegunowym:
 $r = \cos(2\theta), \quad \theta \in [0, 2\pi)$
 
 Chryzantema z godła japońskiego (kamon cesarski) to **16-płatkowy złocień**.
-Wzór biegunowy:
+
+Okazuje się, że wystarczy przemnożyć $\theta$ przez 8 by otrzymać 16 płatków.
+
 $r = \cos(8\theta), \quad \theta \in [0, 2\pi)$
-daje 16 płatków (dla parzystej liczby $n$: $r = \cos(n\theta)$ daje $2n$ płatków, tu $n=8$).
+
+(dla parzystej liczby $n$: $r = \cos(n\theta)$ daje $2n$ płatków).
+
+By uzyskać bardziej zaokrąglone końcówki eksperymentalnie podnoszę $\cos(8\theta)$ do potęgi $<1$ (wartość bezwzględa niezbędna przy pierwiastkowaniu ujemnych wartości cosinusa, kolokwialnie mówiąc "bo nam utnie listki")
 
 ```{python}
 #| echo: false
@@ -339,9 +346,7 @@ theta = np.linspace(0, 2*np.pi, 6000)
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
 
-# =========================================================
-# wersja pojedyncza — bardziej zaokrąglone płatki
-# =========================================================
+# wersja pojedyncza
 
 ax = axes[0]
 
@@ -361,9 +366,7 @@ ax.set_title(
 
 ax.axis('off')
 
-# =========================================================
-# wersja podwójna — druga warstwa obrócona o 15°
-# =========================================================
+# wersja podwójna — druga warstwa obrócona o 35 stopni
 
 ax2 = axes[1]
 
@@ -415,30 +418,29 @@ plt.savefig(
 plt.show()
 ```
 
-Podstawiając $x = r\cos\theta$, $y = r\sin\theta$ oraz $r^2 = x^2 + y^2$, z równania $r = \cos(n\theta)$ uzyskujemy równanie algebraiczne.
+Dane $x = r\cos\theta$, $y = r\sin\theta$ oraz $r^2 = x^2 + y^2$, z równania $r = \cos(8\theta)$ wykorzystujemy kolejno:
 
-Dla $r = \cos(2\theta)$ (quadrifolium, 4 płatki):
-$r = \cos^2\theta - \sin^2\theta = \frac{x^2 - y^2}{r}$
+Rozwijając $r = \cos(8\theta)$ z $\cos(8\theta) + i\sin(8\theta) = (\cos\theta + i\sin\theta)^8$ i porównując części rzeczywiste otrzymujemy:
 
-$r^2 = x^2 - y^2 \implies (x^2+y^2)^2 = x^2 - y^2$
+$r = cos(8\theta) = \cos^8\theta - 28\cos^6\theta\sin^2\theta + 70\cos^4\theta\sin^4\theta - 28\cos^2\theta\sin^6\theta + \sin^8\theta$
 
+Następnie podstawiając $\frac{x}{r} = \cos\theta$, $\frac{y}{r} = \sin\theta$
 
-### TU WEŹ TAK SPRAWDŹ JESZCZE
-Dla ogólnego $r = \cos(n\theta)$ wyrażamy $\cos(n\theta)$ wielomianem Czebyszewa $T_n$ z $\cos\theta = x/r$:
+$r = \frac{1}{r^8}(x^8 - 28x^6y^2 + 70x^4y^4 - 28x^2y^6 + y^8)$
 
-$r \cdot r^n = r^n T_n(x/r) \implies r^{n+1} = \text{(wielomian stopnia } n \text{ w } x, y)$
+${(\sqrt{x^2 + y^2})}^9 = \left(x^8 - 28x^6y^2 + 70x^4y^4 - 28x^2y^6 + y^8\right)$
 
-Dla $n = 8$ (chryzantema):
-$\left(x^2+y^2\right)^{9/2} = T_8\!\left(\frac{x}{\sqrt{x^2+y^2}}\right)\cdot(x^2+y^2)^4$
+By pozbyć się pierwiastka podnosimy obustronnie do kwadratu:
 
-Po wyłączeniu $(x^2+y^2)^4$ i podstawieniu $T_8$ (wielomian Czebyszewa stopnia 8) otrzymujemy:
+$\left(x^2 + y^2\right)^9 = \left(x^8 - 28x^6y^2 + 70x^4y^4 - 28x^2y^6 + y^8\right)^2$
 
-$(x^2+y^2)^9 = \bigl[T_8(x/r)\cdot r^8\bigr]^2, \quad r = \sqrt{x^2+y^2}$
+Jest to rozmaitość algebraiczna stopnia 18 w $\mathbb{R}^2$ (bądź $\mathbb{C}^2$).
 
-Konkretnie, $T_8(t) = 128t^8 - 256t^6 + 160t^4 - 32t^2 + 1$, więc krzywa algebraiczna to:
+```(x^2 + y^2)^9 = (x^8 - 28*x^6*y^2 + 70*x^4*y^4 - 28*x^2*y^6 + y^8)^2```
 
-$\left(x^2+y^2\right)^9 = \left(128x^8 - 256x^6(x^2+y^2) + 160x^4(x^2+y^2)^2 - 32x^2(x^2+y^2)^3 + (x^2+y^2)^4\right)^2$
+Jeżeli chcemy za to uzyskać wzór ładnie zaokrąglonego kamonu cesarskiego ($\cos(8\theta)^{0.1}$) wystarczy zmienić potęgę po lewej stronie biorąc pod uwagę kroki przy podstawieniach.
+Wykonując to wszystko otrzymamy:
 
-Jest to rozmaitość algebraiczna stopnia 18 w $\mathbb{R}^2$ (bądź $\mathbb{C}^2$), zdefiniowana przez zerowanie powyższego wielomianu.
+```((x^2 + y^2)^9)^2 = (x^8 - 28*x^6*y^2 + 70*x^4*y^4 - 28*x^2*y^6 + y^8)^2```
 
 ---
