@@ -1,0 +1,42 @@
+# Lista 3 - Algorytmy Metaheurystyczne
+
+
+## Wyniki:
+
+### Western Sahara
+![](results/westernsahara_SUMMARY.png)
+
+### Djibouti
+![](results/djibouti_SUMMARY.png)
+
+### Quatar
+![](results/quatar_SUMMARY.png)
+
+### Uruguay
+![](results/uruguay_SUMMARY.png)
+
+### Zimbabwe
+![](results/zimbabwe_SUMMARY.png)
+
+### Canada
+![](results/canada_SUMMARY.png)
+
+### Egypt
+![](results/egypt_SUMMARY.png)
+
+### Irleand
+![](results/irleand_SUMMARY.png)
+
+### Oman
+![](results/oman_SUMMARY.png)
+
+### Tanzania
+![](results/tanzania_SUMMARY.png)
+
+
+<br><br>
+
+<div style="text-align: right;">
+Jan Ryszkiewicz 
+282210
+</div>
