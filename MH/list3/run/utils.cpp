@@ -73,67 +73,6 @@ int_fast32_t diff_after_invert(const std::vector<uint_fast32_t>& tour, uint_fast
     return new_distance - old_distance;
 }
 
-SAResult simulated_annealing(
-    std::vector<uint_fast32_t> initial_tour,
-    const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
-    std::mt19937& GEN,
-    double initial_temp,
-    double cooling_rate,
-    uint_fast32_t epoch_length,
-    uint_fast32_t max_epochs_no_improve)
-{
-    uint_fast32_t n = initial_tour.size();
-    std::vector<uint_fast32_t> current_tour = initial_tour;
-    uint_fast32_t current_dist = tour_distance(current_tour, dist_matrix);
-
-    std::vector<uint_fast32_t> best_tour = current_tour;
-    uint_fast32_t best_dist = current_dist;
-
-    std::uniform_int_distribution<uint_fast32_t> idx_dist(0, n - 1);
-    std::uniform_real_distribution<double> prob_dist(0.0, 1.0);
-
-    double temp = initial_temp;
-    uint_fast32_t epochs_no_improve = 0;
-
-    while (epochs_no_improve < max_epochs_no_improve) {
-        for (uint_fast32_t step = 0; step < epoch_length; ++step) {
-            // Pick random 2-opt move
-            uint_fast32_t i = idx_dist(GEN);
-            uint_fast32_t j = idx_dist(GEN);
-            while (j == i) j = idx_dist(GEN);
-            if (i > j) std::swap(i, j);
-
-            int_fast32_t delta = diff_after_invert(current_tour, i, j, dist_matrix);
-
-            if (delta < 0) {
-                std::reverse(current_tour.begin() + i, current_tour.begin() + j + 1);
-                current_dist += delta;
-            } else {
-                double probability = std::exp(-static_cast<double>(delta) / temp);
-                if (prob_dist(GEN) < probability) {
-                    std::reverse(current_tour.begin() + i, current_tour.begin() + j + 1);
-                    current_dist += delta;
-                }
-            }
-
-            if (current_dist < best_dist) {
-                best_dist = current_dist;
-                best_tour = current_tour;
-            }
-        }
-
-        temp *= cooling_rate;
-
-        if (current_dist < best_dist) {
-            epochs_no_improve = 0;
-        } else {
-            ++epochs_no_improve;
-        }
-    }
-
-    return {best_tour, best_dist, initial_temp, cooling_rate, epoch_length, max_epochs_no_improve};
-}
-
 TabuResult tabu_search(
     std::vector<uint_fast32_t> initial_tour,
     const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
@@ -228,4 +167,62 @@ TabuResult tabu_search(
     }
 
     return {best_tour, best_dist, iter, max_iter_no_improve, tabu_cooldown, sample_size};
+}
+
+LocalSearchResult local_search(
+    std::vector<uint_fast32_t> initial_tour, 
+    const std::vector<std::vector<uint_fast32_t>>& dist_matrix, 
+    std::mt19937& GEN,
+    uint_fast32_t sample_size) 
+{
+    uint_fast32_t improvement_steps = 0;
+    uint_fast32_t initial_distance = tour_distance(initial_tour, dist_matrix);
+    uint_fast32_t current_distance = initial_distance;
+
+    bool improvement = true;
+    bool full_search = (sample_size == initial_tour.size());
+    std::uniform_int_distribution<> dist(0, sample_size - 1);
+
+    while(improvement) {
+        improvement = false;
+
+        int_fast32_t best_difference = 0;
+        uint_fast32_t best_i = -1;
+        uint_fast32_t best_j = -1;
+
+        if(full_search){
+            for(uint_fast32_t i = 0; i < initial_tour.size() - 1; ++i) {
+                for(uint_fast32_t j = i + 1; j < initial_tour.size(); ++j) {
+                    int_fast32_t difference = diff_after_invert(initial_tour, i, j, dist_matrix);
+                    if (difference < best_difference) {
+                        best_difference = difference;
+                        best_i = i;
+                        best_j = j;
+                    }
+                }
+            }
+        } else {
+            for(uint_fast32_t k = 0; k < sample_size; ++k) {
+                uint_fast32_t i = dist(GEN);
+                uint_fast32_t j = dist(GEN);
+                while (j == i) j = dist(GEN);
+                if (i > j) std::swap(i, j);
+
+                int_fast32_t difference = diff_after_invert(initial_tour, i, j, dist_matrix);
+                if (difference < best_difference) {
+                    best_difference = difference;
+                    best_i = i;
+                    best_j = j;
+                }
+            }
+        }
+
+        if(best_difference < 0) {
+            std::reverse(initial_tour.begin() + best_i, initial_tour.begin() + best_j + 1); 
+            current_distance += best_difference;
+            improvement_steps++;
+            improvement = true;
+        }
+    }
+    return LocalSearchResult{initial_tour, current_distance, improvement_steps, sample_size};
 }

@@ -36,16 +36,6 @@ int_fast32_t diff_after_invert(
   uint_fast32_t j, 
   const std::vector<std::vector<uint_fast32_t>>& dist_matrix);
 
-
-struct SAResult {
-  std::vector<uint_fast32_t> tour;
-  uint_fast32_t distance;
-  double init_temp;
-  double cooling_rate;
-  uint_fast32_t epoch_length;
-  uint_fast32_t max_epochs_no_improve;
-};
-
 struct TabuResult {
   std::vector<uint_fast32_t> tour;
   uint_fast32_t distance;
@@ -55,22 +45,26 @@ struct TabuResult {
   uint_fast32_t sample_size;
 };
 
-SAResult simulated_annealing(
-  std::vector<uint_fast32_t> initial_tour,
-  const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
-  std::mt19937& GEN,
-  double initial_temp,
-  double cooling_rate,
-  uint_fast32_t epoch_length,
-  uint_fast32_t max_epochs_no_improve
-);
-
 TabuResult tabu_search(
   std::vector<uint_fast32_t> initial_tour,
   const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
   std::mt19937& GEN,
   uint_fast32_t tabu_cooldown,
   uint_fast32_t max_iter_no_improve,
+  uint_fast32_t sample_size
+);
+
+struct LocalSearchResult {
+  std::vector<uint_fast32_t> tour;
+  uint_fast32_t distance;
+  uint_fast32_t iters;
+  uint_fast32_t sample_size;
+};
+
+LocalSearchResult local_search(
+  std::vector<uint_fast32_t> initial_tour, 
+  const std::vector<std::vector<uint_fast32_t>>& dist_matrix, 
+  std::mt19937& GEN,
   uint_fast32_t sample_size
 );
 
