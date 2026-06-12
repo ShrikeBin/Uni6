@@ -20,7 +20,7 @@ struct City {
     double y;
 };
 
-// ─── TSP helpers (unchanged from your template) ───────────────────────────────
+// ─── TSP helpers ──────────────────────────────────────────────────────────────
 
 std::vector<City>           read_data(const std::string& filename);
 std::vector<uint_fast32_t>  random_tour(int num_cities, std::mt19937& GEN);
@@ -66,7 +66,9 @@ LocalSearchResult local_search(
     std::vector<uint_fast32_t> initial_tour,
     const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
     std::mt19937& GEN,
-    uint_fast32_t sample_size);
+    uint_fast32_t sample_size,
+    uint_fast32_t max_iters
+);
 
 // ─── GA types ─────────────────────────────────────────────────────────────────
 
@@ -96,9 +98,9 @@ struct GAResult {
 // ─── Island GA ────────────────────────────────────────────────────────────────
 
 struct IslandParams {
-    uint_fast32_t num_islands       = 4;
+    uint_fast32_t num_islands        = 8;
     uint_fast32_t migration_interval = 20;   // migrate every N generations
-    uint_fast32_t migration_size     = 2;    // how many individuals to send
+    uint_fast32_t migration_size     = 4;    // how many individuals to send
     GAParams      island_ga_params;          // params for each island's GA
 };
 

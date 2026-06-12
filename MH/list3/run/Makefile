@@ -1,6 +1,6 @@
 CXX      = clang++
 CXXFLAGS = -O2 -std=c++17 -fopenmp
-TARGET   = runga
+TARGET   = run
 SRCS     = run.cpp utils.cpp
 
 $(TARGET): $(SRCS)

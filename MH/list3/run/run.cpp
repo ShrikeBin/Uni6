@@ -13,7 +13,7 @@ std::mt19937 GEN(RD());
 
 void run_exp_for_file(const std::vector<City>& cities, const std::string& filename) {
     bool PRINT_TOURS    = false;
-    bool DEBUG_ITER     = false;
+    bool DEBUG_ITER     = true;
     uint_fast32_t n     = cities.size();
 
     std::cout << "Loaded file: " << filename << " | Number of vertices (n): " << n << "\n\n";
@@ -30,14 +30,14 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
 
     // ── Shared base params ────────────────────────────────────────────────────
     GAParams base;
-    base.pop_size         = 100;
+    base.pop_size         = 200;
     base.max_generations  = 1000;
     base.no_improve_limit = 150;
     base.cross_prob       = 0.85;
     base.mut_prob         = 0.05;
     base.tournament_k     = 5;
     base.memetic          = false;
-    base.memetic_2opt_iters = 0;   // 0 = use sqrt(n) internally
+    base.memetic_2opt_iters = static_cast<uint_fast32_t>(std::sqrt(std::sqrt(n)));
 
     // Helper: print common GA param block
     auto print_params = [&](const GAParams& p) {
@@ -74,6 +74,8 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
         uint_fast64_t sum_dist  = 0;
         uint_fast64_t sum_gens  = 0;
 
+        if (DEBUG_ITER)
+            std::cout << "\n";
         for (uint_fast32_t rep = 1; rep <= REPETITIONS; ++rep) {
             if (DEBUG_ITER)
                 std::cout << "OX rep " << rep << "/" << REPETITIONS << "\r" << std::flush;
@@ -108,6 +110,8 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
         uint_fast64_t sum_dist  = 0;
         uint_fast64_t sum_gens  = 0;
 
+        if (DEBUG_ITER)
+                std::cout << "\n";
         for (uint_fast32_t rep = 1; rep <= REPETITIONS; ++rep) {
             if (DEBUG_ITER)
                 std::cout << "PMX rep " << rep << "/" << REPETITIONS << "\r" << std::flush;
@@ -131,23 +135,26 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // Experiment 3: Memetic GA — OX + 2-opt polish after every mutation
+    // Experiment 3: Memetic GA — OX + 2-opt local
     // ══════════════════════════════════════════════════════════════════════════
     {
         GAParams params         = base;
         params.crossover_type   = CrossoverType::OX;
         params.memetic          = true;
-        params.memetic_2opt_iters = static_cast<uint_fast32_t>(std::sqrt(n));
-        params.no_improve_limit = 80;   // 2-opt does heavy lifting, converges faster
+        params.max_generations  = 100;
+        params.memetic_2opt_iters = static_cast<uint_fast32_t>(std::sqrt(std::sqrt(n)));
+        params.no_improve_limit = 80;
 
         std::vector<uint_fast32_t> best_tour;
         uint_fast32_t best_dist = std::numeric_limits<uint_fast32_t>::max();
         uint_fast64_t sum_dist  = 0;
         uint_fast64_t sum_gens  = 0;
 
-        for (uint_fast32_t rep = 1; rep <= REPETITIONS; ++rep) {
+        if (DEBUG_ITER)
+                std::cout << "\n";
+        for (uint_fast32_t rep = 1; rep <= REPETITIONS / 2; ++rep) {
             if (DEBUG_ITER)
-                std::cout << "Memetic rep " << rep << "/" << REPETITIONS << "\r" << std::flush;
+                std::cout << "Memetic rep " << rep << "/" << REPETITIONS / 2 << "\r" << std::flush;
 
             GAResult r = genetic_algorithm(n, dist_matrix, GEN, params);
             sum_dist  += r.best_distance;
@@ -174,13 +181,13 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
     {
         GAParams island_ga      = base;
         island_ga.crossover_type = CrossoverType::OX;
-        island_ga.pop_size       = 50;    // 4 * 50 = 200 total individuals
+        island_ga.pop_size       = 50;    // 8 * 50 = 200 total individuals
         island_ga.no_improve_limit = 150;
 
         IslandParams iparams;
-        iparams.num_islands        = 4;
+        iparams.num_islands        = 8;
         iparams.migration_interval = 20;
-        iparams.migration_size     = 2;
+        iparams.migration_size     = 4;
         iparams.island_ga_params   = island_ga;
 
         std::vector<uint_fast32_t> best_tour;

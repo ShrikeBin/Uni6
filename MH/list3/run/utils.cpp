@@ -166,26 +166,60 @@ LocalSearchResult local_search(
     std::vector<uint_fast32_t> initial_tour,
     const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
     std::mt19937& GEN,
-    uint_fast32_t sample_size)
+    uint_fast32_t sample_size,
+    uint_fast32_t max_iters)
 {
     uint_fast32_t current_distance = tour_distance(initial_tour, dist_matrix);
     uint_fast32_t improvement_steps = 0;
-    bool full_search = (sample_size >= initial_tour.size());
+    bool full_search = (sample_size == 0);
     std::uniform_int_distribution<uint_fast32_t> dist(0, initial_tour.size()-1);
 
     bool improvement = true;
-    while (improvement) {
+    while (improvement && (improvement_steps <= max_iters)) {
         improvement = false;
         int_fast32_t best_diff = 0;
         uint_fast32_t best_i = 0, best_j = 0;
 
         if (full_search) {
-            for (uint_fast32_t i = 0; i < initial_tour.size()-1; ++i)
-                for (uint_fast32_t j = i+1; j < initial_tour.size(); ++j) {
-                    int_fast32_t d = diff_after_invert(initial_tour, i, j, dist_matrix);
-                    if (d < best_diff) { best_diff = d; best_i = i; best_j = j; }
+            int_fast32_t  global_best_diff = 0;
+            uint_fast32_t global_best_i    = 0;
+            uint_fast32_t global_best_j    = 0;
+
+            #pragma omp parallel
+            {
+                int_fast32_t  local_diff = 0;
+                uint_fast32_t local_i    = 0;
+                uint_fast32_t local_j    = 0;
+
+                #pragma omp for schedule(dynamic, 4) nowait
+                for (int i = 0; i < static_cast<int>(initial_tour.size()) - 1; ++i) {
+                    for (uint_fast32_t j = i + 1; j < initial_tour.size(); ++j) {
+                        int_fast32_t d = diff_after_invert(initial_tour, i, j, dist_matrix);
+                        if (d < local_diff) {
+                            local_diff = d;
+                            local_i    = static_cast<uint_fast32_t>(i);
+                            local_j    = j;
+                        }
+                    }
                 }
+
+                // One thread at a time merge local best into global best
+                #pragma omp critical
+                {
+                    if (local_diff < global_best_diff) {
+                        global_best_diff = local_diff;
+                        global_best_i    = local_i;
+                        global_best_j    = local_j;
+                    }
+                }
+            }
+
+            best_diff = global_best_diff;
+            best_i    = global_best_i;
+            best_j    = global_best_j;
+
         } else {
+            // GEN is not thread-safe so keep it
             for (uint_fast32_t k = 0; k < sample_size; ++k) {
                 uint_fast32_t i = dist(GEN);
                 uint_fast32_t j = dist(GEN);
@@ -329,7 +363,7 @@ static std::vector<std::vector<uint_fast32_t>> next_generation(
     const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
     std::mt19937&                                  rng,
     const GAParams&                                gp,
-    uint_fast32_t                                  memetic_samples)
+    uint_fast32_t                                  memetic_iters)
 {
     const uint_fast32_t POP = pop.size();
     std::uniform_real_distribution<double> prob_dist(0.0, 1.0);
@@ -362,8 +396,8 @@ static std::vector<std::vector<uint_fast32_t>> next_generation(
         if (prob_dist(rng) < gp.mut_prob) mutate_invert(child2, rng);
 
         if (gp.memetic) {
-            child1 = local_search(child1, dist_matrix, rng, memetic_samples).tour;
-            child2 = local_search(child2, dist_matrix, rng, memetic_samples).tour;
+            child1 = local_search(child1, dist_matrix, rng, 0, memetic_iters).tour;
+            child2 = local_search(child2, dist_matrix, rng, 0, memetic_iters).tour;
         }
 
         new_pop.push_back(std::move(child1));
@@ -395,9 +429,7 @@ GAResult genetic_algorithm(
     const GAParams& params)
 {
     const uint_fast32_t POP = params.pop_size;
-    const uint_fast32_t memetic_samples = (params.memetic_2opt_iters == 0)
-        ? static_cast<uint_fast32_t>(std::sqrt(n))
-        : params.memetic_2opt_iters;
+    const uint_fast32_t memetic_iters = params.memetic_2opt_iters;
 
     // ── Initial population ────────────────────────────────────────────────────
     std::vector<std::vector<uint_fast32_t>> pop(POP);
@@ -419,9 +451,8 @@ GAResult genetic_algorithm(
     uint_fast32_t no_improve = 0;
 
     for (uint_fast32_t gen = 0; gen < params.max_generations; ++gen) {
-
         pop = next_generation(pop, fitness, best_tour, best_dist,
-                              dist_matrix, GEN, params, memetic_samples);
+                              dist_matrix, GEN, params, memetic_iters);
 
         // Re-evaluate
         #pragma omp parallel for schedule(static)
@@ -463,9 +494,7 @@ IslandResult island_genetic_algorithm(
     const uint_fast32_t MIG_INTERVAL = params.migration_interval;
     const uint_fast32_t MIG_SIZE     = params.migration_size;
     const uint_fast32_t MAX_GEN      = gp.max_generations;
-    const uint_fast32_t memetic_samples = (gp.memetic_2opt_iters == 0)
-        ? static_cast<uint_fast32_t>(std::sqrt(n))
-        : gp.memetic_2opt_iters;
+    const uint_fast32_t memetic_iters = gp.memetic_2opt_iters;
 
     // Per-island RNGs seeded from master GEN
     std::vector<std::mt19937> rngs(NUM_ISLANDS);
@@ -504,7 +533,6 @@ IslandResult island_genetic_algorithm(
         uint_fast32_t no_improve = 0;
 
         for (uint_fast32_t gen = 1; gen <= MAX_GEN; ++gen) {
-
             // ── Migration: export ─────────────────────────────────────────────
             if (gen % MIG_INTERVAL == 0) {
                 std::vector<uint_fast32_t> order(POP);
@@ -546,7 +574,7 @@ IslandResult island_genetic_algorithm(
 
             // ── Next generation ───────────────────────────────────────────────
             pop = next_generation(pop, fitness, best_tour, best_dist,
-                                  dist_matrix, rng, gp, memetic_samples);
+                                  dist_matrix, rng, gp, memetic_iters);
 
             for (uint_fast32_t i = 0; i < POP; ++i)
                 fitness[i] = tour_distance(pop[i], dist_matrix);
