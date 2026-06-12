@@ -12,172 +12,205 @@ std::random_device RD;
 std::mt19937 GEN(RD());
 
 void run_exp_for_file(const std::vector<City>& cities, const std::string& filename) {
-    bool PRINT_TOURS = false;
-    bool PRINT_BEST_ONLY = true;
-    bool DEBUG_ITER = false;
-    unsigned int n = cities.size();
+    bool PRINT_TOURS    = false;
+    bool DEBUG_ITER     = false;
+    uint_fast32_t n     = cities.size();
 
     std::cout << "Loaded file: " << filename << " | Number of vertices (n): " << n << "\n\n";
 
-    ///TODO REMOVE IT AFTER FIGURING OUT THE BESST
-    if(n >= 2000) return;
+    if (n >= 2000) return;
 
+    // Build distance matrix
     std::vector<std::vector<uint_fast32_t>> dist_matrix(n, std::vector<uint_fast32_t>(n));
-    for (uint_fast32_t i = 0; i < n; ++i) {
-        for (uint_fast32_t j = 0; j < n; ++j) {
+    for (uint_fast32_t i = 0; i < n; ++i)
+        for (uint_fast32_t j = 0; j < n; ++j)
             dist_matrix[i][j] = discrete_distance(cities[i], cities[j]);
+
+    constexpr uint_fast32_t REPETITIONS = 10;
+
+    // ── Shared base params ────────────────────────────────────────────────────
+    GAParams base;
+    base.pop_size         = 100;
+    base.max_generations  = 1000;
+    base.no_improve_limit = 150;
+    base.cross_prob       = 0.85;
+    base.mut_prob         = 0.05;
+    base.tournament_k     = 5;
+    base.memetic          = false;
+    base.memetic_2opt_iters = 0;   // 0 = use sqrt(n) internally
+
+    // Helper: print common GA param block
+    auto print_params = [&](const GAParams& p) {
+        std::cout << "Population size:    " << p.pop_size         << "\n"
+                  << "Max generations:    " << p.max_generations  << "\n"
+                  << "No-improve limit:   " << p.no_improve_limit << "\n"
+                  << "Crossover prob:     " << p.cross_prob       << "\n"
+                  << "Mutation prob:      " << p.mut_prob         << "\n"
+                  << "Tournament k:       " << p.tournament_k     << "\n";
+    };
+
+    // Helper: print result summary
+    auto print_results = [&](uint_fast32_t best, double avg, double avg_gen,
+                             const std::vector<uint_fast32_t>& tour) {
+        std::cout << "Best distance:      " << best    << "\n"
+                  << "Average distance:   " << avg     << "\n"
+                  << "Avg generations:    " << avg_gen << "\n";
+        if (PRINT_TOURS) {
+            std::cout << "Best tour: ";
+            for (auto c : tour) std::cout << c << ">";
+            std::cout << "\n";
         }
-    }
+    };
 
-    // Taboo experiments
-    uint_fast32_t TABU_REPETITIONS = 30;
-    std::vector<uint_fast32_t> cooldowns = {5, 10, static_cast<uint_fast32_t>(std::log(n)), static_cast<uint_fast32_t>(std::sqrt(n))};
-    std::vector<uint_fast32_t> max_iters = {static_cast<uint_fast32_t>(std::sqrt(n)), 100, 1000, n / 2};
-    std::vector<uint_fast32_t> sample_sizes = {static_cast<uint_fast32_t>(std::sqrt(n)), n / 2};
+    // ══════════════════════════════════════════════════════════════════════════
+    // Experiment 1: GA — OX crossover
+    // ══════════════════════════════════════════════════════════════════════════
+    {
+        GAParams params      = base;
+        params.crossover_type = CrossoverType::OX;
 
-    uint_fast32_t bestAVGTabu = -1;
-    TabuResult bestTabuConfig;
+        std::vector<uint_fast32_t> best_tour;
+        uint_fast32_t best_dist = std::numeric_limits<uint_fast32_t>::max();
+        uint_fast64_t sum_dist  = 0;
+        uint_fast64_t sum_gens  = 0;
 
-    for(auto cooldown: cooldowns) {
-        for(auto max_iter : max_iters) {
-            for(auto sample_size : sample_sizes) {
-                std::vector<uint_fast32_t> best_tour_taboo = random_tour(n, GEN);
-                uint_fast32_t best_distance = -1;
-                uint_fast64_t sum_distance = 0;
-                uint_fast64_t sum_iters = 0;
+        for (uint_fast32_t rep = 1; rep <= REPETITIONS; ++rep) {
+            if (DEBUG_ITER)
+                std::cout << "OX rep " << rep << "/" << REPETITIONS << "\r" << std::flush;
 
-                if(!PRINT_BEST_ONLY) {
-                    std::cout << "\n====================[TABU]=====================\n" <<
-                        "City: "                            << filename     << 
-                        " (" << n << ")"                    << "\n"
-                        "Max Iterations w/no improvement: " << max_iter     << "\n" 
-                        "Tabu list expire cooldown: "       << cooldown     << "\n"
-                        "Sample size for 2-opt: "           << sample_size  << "\n\n";
-                }
-
-                for(uint_fast32_t i = 1; i <= TABU_REPETITIONS; ++i){
-                    if(DEBUG_ITER) {
-                        std::cout<< "Iteration " << i << "/" << TABU_REPETITIONS << "\r" << std::flush;
-                    }
-                    std::cout << std::flush;
-
-                    TabuResult result = tabu_search(random_tour(n, GEN), dist_matrix, GEN, cooldown, max_iter, sample_size);
-
-                    sum_distance += result.distance;
-                    sum_iters += result.iters;
-
-                    if(result.distance < best_distance) {
-                        best_tour_taboo = result.tour;
-                        best_distance = result.distance;
-                    }
-                }
-                double AVG = static_cast<double>(sum_distance) / TABU_REPETITIONS;
-                if(AVG < bestAVGTabu){
-                    bestAVGTabu = AVG;
-                    bestTabuConfig.max_iters_no_improve = max_iter;
-                    bestTabuConfig.sample_size = sample_size;
-                    bestTabuConfig.tabu_cooldown = cooldown;
-                }
-
-                if(!PRINT_BEST_ONLY) {
-                    std::cout << "Average solution value: "     << AVG                                                  << "\n";
-                    std::cout << "Average improvement steps: "  << static_cast<double>(sum_iters)    / TABU_REPETITIONS << "\n";
-                    std::cout << "Best solution: "              << best_distance                                        << "\n";
-                    if(PRINT_TOURS) {
-                        std::cout << "\n====================[TOUR]=====================\n";
-                        for(uint_fast32_t city_id : best_tour_taboo) {
-                            std::cout << city_id << ">";
-                        }
-                    }
-                }
+            GAResult r = genetic_algorithm(n, dist_matrix, GEN, params);
+            sum_dist  += r.best_distance;
+            sum_gens  += r.generations_run;
+            if (r.best_distance < best_dist) {
+                best_dist = r.best_distance;
+                best_tour = r.best_tour;
             }
         }
+
+        std::cout << "\n====================[GA — OX crossover]=====================\n"
+                  << "File: " << filename << " (" << n << ")\n";
+        print_params(params);
+        print_results(best_dist,
+                      static_cast<double>(sum_dist) / REPETITIONS,
+                      static_cast<double>(sum_gens)  / REPETITIONS,
+                      best_tour);
     }
 
-    std::cout << "\n====================[BEST TABU]=====================\n" <<
-    "City: "                            << filename     << 
-    " (" << n << ")"                    << "\n"         <<
-    "Average Solution value: "          << bestAVGTabu                          << "\n" 
-    "Max Iterations w/no improvement: " << bestTabuConfig.max_iters_no_improve  << "\n" 
-    "Tabu list expire cooldown: "       << bestTabuConfig.tabu_cooldown         << "\n"
-    "Sample size for 2-opt: "           << bestTabuConfig.sample_size           << "\n\n";
-    
+    // ══════════════════════════════════════════════════════════════════════════
+    // Experiment 2: GA — PMX crossover
+    // ══════════════════════════════════════════════════════════════════════════
+    {
+        GAParams params       = base;
+        params.crossover_type = CrossoverType::PMX;
 
-    // Annealing experiments
-    uint_fast32_t ANNEALING_REPETITIONS = 30;
-    std::vector<double> init_temps = {1000, static_cast<double>(n), static_cast<double>(2*n), static_cast<double>(10*n)};
-    std::vector<double> cooling_rates = {0.8, 0.85, 0.9, 0.95, 0.99};
-    std::vector<uint_fast32_t> epoch_lengths = {5, 10, static_cast<uint_fast32_t>(std::log(n)), static_cast<uint_fast32_t>(std::sqrt(n)), n / 2};
-    std::vector<uint_fast32_t> max_epochs = {static_cast<uint_fast32_t>(std::sqrt(n)), 100, n, 5*n};
+        std::vector<uint_fast32_t> best_tour;
+        uint_fast32_t best_dist = std::numeric_limits<uint_fast32_t>::max();
+        uint_fast64_t sum_dist  = 0;
+        uint_fast64_t sum_gens  = 0;
 
-    uint_fast32_t bestAVGAnnealing = -1;
-    SAResult bestAnnealingConfig;
+        for (uint_fast32_t rep = 1; rep <= REPETITIONS; ++rep) {
+            if (DEBUG_ITER)
+                std::cout << "PMX rep " << rep << "/" << REPETITIONS << "\r" << std::flush;
 
-    for(auto init_temp: init_temps) {
-        for(auto cooling_rate : cooling_rates) {
-            for(auto epoch_lenght : epoch_lengths){
-                for(auto max_epoch : max_epochs) {
-                    std::vector<uint_fast32_t> best_tour_annealing = random_tour(n, GEN);
-                    uint_fast32_t best_distance = -1;
-                    uint_fast64_t sum_distance = 0;
-
-                    if(!PRINT_BEST_ONLY) {
-                        std::cout << "\n====================[ANNEALING]=====================\n" <<
-                            "City: "                            << filename     << 
-                            " (" << n << ")"                    << "\n"
-                            "Max epochs w/no improvement: "     << max_epoch    << "\n" 
-                            "Tries per epoch: "                 << epoch_lenght << "\n"
-                            "Cooling rate: "                    << cooling_rate << "\n"
-                            "Init Temp: "                       << init_temp    << "\n\n";
-                    }
-
-                    for(uint_fast32_t i = 1; i <= ANNEALING_REPETITIONS; ++i) {
-                        if(DEBUG_ITER) {
-                            std::cout<< "Iteration " << i << "/" << ANNEALING_REPETITIONS << "\r" << std::flush;
-                        }
-                        std::cout << std::flush;
-
-                        SAResult result = simulated_annealing(random_tour(n, GEN), dist_matrix, GEN, init_temp, cooling_rate, epoch_lenght, max_epoch);
-
-                        sum_distance += result.distance;
-
-                        if(result.distance < best_distance) {
-                            best_tour_annealing = result.tour;
-                            best_distance = result.distance;
-                        }
-                    }
-                    double AVG = static_cast<double>(sum_distance) / ANNEALING_REPETITIONS;
-                    if(AVG < bestAVGAnnealing){
-                        bestAVGAnnealing = AVG;
-                        bestAnnealingConfig.cooling_rate = cooling_rate;
-                        bestAnnealingConfig.epoch_length = epoch_lenght;
-                        bestAnnealingConfig.max_epochs_no_improve = max_epoch;
-                        bestAnnealingConfig.init_temp = init_temp;
-                    }
-
-                    if(!PRINT_BEST_ONLY) {
-                        std::cout << "Average solution value: "     << AVG              << "\n";
-                        std::cout << "Best solution: "              << best_distance    << "\n";
-                        if(PRINT_TOURS) {
-                            std::cout << "\n====================[TOUR]=====================\n";
-                            for(uint_fast32_t city_id : best_tour_annealing) {
-                                std::cout << city_id << ">";
-                            }
-                        }
-                    }
-                }
+            GAResult r = genetic_algorithm(n, dist_matrix, GEN, params);
+            sum_dist  += r.best_distance;
+            sum_gens  += r.generations_run;
+            if (r.best_distance < best_dist) {
+                best_dist = r.best_distance;
+                best_tour = r.best_tour;
             }
         }
+
+        std::cout << "\n====================[GA — PMX crossover]=====================\n"
+                  << "File: " << filename << " (" << n << ")\n";
+        print_params(params);
+        print_results(best_dist,
+                      static_cast<double>(sum_dist) / REPETITIONS,
+                      static_cast<double>(sum_gens)  / REPETITIONS,
+                      best_tour);
     }
 
-    std::cout << "\n====================[BEST ANNEALING]=====================\n" <<
-    "City: "                            << filename     << 
-    " (" << n << ")"                    << "\n"         <<
-    "Average Solution value: "          << bestAVGAnnealing                             << "\n"    
-    "Max epochs w/no improvement: "     << bestAnnealingConfig.max_epochs_no_improve    << "\n" 
-    "Tries per epoch: "                 << bestAnnealingConfig.epoch_length             << "\n"
-    "Cooling rate: "                    << bestAnnealingConfig.cooling_rate             << "\n"
-    "Init Temp: "                       << bestAnnealingConfig.init_temp                << "\n\n";
+    // ══════════════════════════════════════════════════════════════════════════
+    // Experiment 3: Memetic GA — OX + 2-opt polish after every mutation
+    // ══════════════════════════════════════════════════════════════════════════
+    {
+        GAParams params         = base;
+        params.crossover_type   = CrossoverType::OX;
+        params.memetic          = true;
+        params.memetic_2opt_iters = static_cast<uint_fast32_t>(std::sqrt(n));
+        params.no_improve_limit = 80;   // 2-opt does heavy lifting, converges faster
+
+        std::vector<uint_fast32_t> best_tour;
+        uint_fast32_t best_dist = std::numeric_limits<uint_fast32_t>::max();
+        uint_fast64_t sum_dist  = 0;
+        uint_fast64_t sum_gens  = 0;
+
+        for (uint_fast32_t rep = 1; rep <= REPETITIONS; ++rep) {
+            if (DEBUG_ITER)
+                std::cout << "Memetic rep " << rep << "/" << REPETITIONS << "\r" << std::flush;
+
+            GAResult r = genetic_algorithm(n, dist_matrix, GEN, params);
+            sum_dist  += r.best_distance;
+            sum_gens  += r.generations_run;
+            if (r.best_distance < best_dist) {
+                best_dist = r.best_distance;
+                best_tour = r.best_tour;
+            }
+        }
+
+        std::cout << "\n====================[Memetic GA — OX + 2-opt]=====================\n"
+                  << "File: " << filename << " (" << n << ")\n";
+        print_params(params);
+        std::cout << "2-opt samples:      " << params.memetic_2opt_iters << "\n";
+        print_results(best_dist,
+                      static_cast<double>(sum_dist) / REPETITIONS,
+                      static_cast<double>(sum_gens)  / REPETITIONS,
+                      best_tour);
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Experiment 4: Island GA — 4 islands, ring migration, OpenMP parallel
+    // ══════════════════════════════════════════════════════════════════════════
+    {
+        GAParams island_ga      = base;
+        island_ga.crossover_type = CrossoverType::OX;
+        island_ga.pop_size       = 50;    // 4 * 50 = 200 total individuals
+        island_ga.no_improve_limit = 150;
+
+        IslandParams iparams;
+        iparams.num_islands        = 4;
+        iparams.migration_interval = 20;
+        iparams.migration_size     = 2;
+        iparams.island_ga_params   = island_ga;
+
+        std::vector<uint_fast32_t> best_tour;
+        uint_fast32_t best_dist = std::numeric_limits<uint_fast32_t>::max();
+        uint_fast64_t sum_dist  = 0;
+
+        for (uint_fast32_t rep = 1; rep <= REPETITIONS; ++rep) {
+            if (DEBUG_ITER)
+                std::cout << "Island rep " << rep << "/" << REPETITIONS << "\r" << std::flush;
+
+            IslandResult r = island_genetic_algorithm(n, dist_matrix, GEN, iparams);
+            sum_dist += r.best_distance;
+            if (r.best_distance < best_dist) {
+                best_dist = r.best_distance;
+                best_tour = r.best_tour;
+            }
+        }
+
+        std::cout << "\n====================[Island GA — 4 islands, OX, OpenMP]=====================\n"
+                  << "File: " << filename << " (" << n << ")\n";
+        print_params(island_ga);
+        std::cout << "Islands:            " << iparams.num_islands        << "\n"
+                  << "Pop per island:     " << island_ga.pop_size         << "\n"
+                  << "Migration interval: " << iparams.migration_interval << " generations\n"
+                  << "Migration size:     " << iparams.migration_size     << "\n";
+        print_results(best_dist,
+                      static_cast<double>(sum_dist) / REPETITIONS,
+                      0.0,   // generations_run not tracked per-island in IslandResult
+                      best_tour);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -185,18 +218,16 @@ int main(int argc, char* argv[]) {
         std::cerr << "Usage: " << argv[0] << " <file/directory>\n";
         return 1;
     }
-    std::cout << std::fixed << std::setprecision(24);
+    std::cout << std::fixed << std::setprecision(4);
 
     std::vector<std::string> file_queue;
 
     for (int i = 1; i < argc; ++i) {
         std::filesystem::path p(argv[i]);
-
         if (std::filesystem::is_directory(p)) {
             for (const auto& entry : std::filesystem::directory_iterator(p)) {
-                if (entry.path().extension() == ".tsp") {
+                if (entry.path().extension() == ".tsp")
                     file_queue.push_back(entry.path().string());
-                }
             }
         } else if (std::filesystem::exists(p)) {
             file_queue.push_back(p.string());
@@ -206,9 +237,8 @@ int main(int argc, char* argv[]) {
     }
 
     for (const std::string& filename : file_queue) {
-        
         std::vector<City> cities = read_data(filename);
-        
+
         if (cities.empty()) {
             std::cerr << "Failed to load: " << filename << "\n";
             continue;
@@ -217,14 +247,11 @@ int main(int argc, char* argv[]) {
         std::cout << "------------------------------------------\n";
         auto start = std::chrono::high_resolution_clock::now();
 
-        {
-            run_exp_for_file(cities, filename);
-        }
+        run_exp_for_file(cities, filename);
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> duration = end - start;
-        std::cout << "\n";
-        std::cout << "Finished " << filename << " in " << duration.count() << " seconds.\n";
+        std::cout << "\nFinished " << filename << " in " << duration.count() << " seconds.\n";
         std::cout << "------------------------------------------\n";
     }
 
