@@ -161,8 +161,7 @@ TabuResult tabu_search(
 }
 
 // ─── Local Search / 2-opt ─────────────────────────────────────────────────────
-
-LocalSearchResult local_search(
+LocalSearchResult local_search_mp(
     std::vector<uint_fast32_t> initial_tour,
     const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
     std::mt19937& GEN,
@@ -191,7 +190,7 @@ LocalSearchResult local_search(
                 uint_fast32_t local_i    = 0;
                 uint_fast32_t local_j    = 0;
 
-                #pragma omp for schedule(dynamic, 4) nowait
+                #pragma omp for schedule(dynamic, 8) nowait
                 for (int i = 0; i < static_cast<int>(initial_tour.size()) - 1; ++i) {
                     for (uint_fast32_t j = i + 1; j < initial_tour.size(); ++j) {
                         int_fast32_t d = diff_after_invert(initial_tour, i, j, dist_matrix);
@@ -238,6 +237,68 @@ LocalSearchResult local_search(
             improvement = true;
         }
     }
+    return {initial_tour, current_distance, improvement_steps, sample_size};
+}
+
+LocalSearchResult local_search(
+    std::vector<uint_fast32_t> initial_tour,
+    const std::vector<std::vector<uint_fast32_t>>& dist_matrix,
+    std::mt19937& GEN,
+    uint_fast32_t sample_size,
+    uint_fast32_t max_iters)
+{
+    uint_fast32_t current_distance = tour_distance(initial_tour, dist_matrix);
+    uint_fast32_t improvement_steps = 0;
+    const bool full_search = (sample_size == 0);
+    const size_t tour_size = initial_tour.size();
+    
+    std::uniform_int_distribution<uint_fast32_t> dist(0, tour_size - 1);
+
+    bool improvement = true;
+    while (improvement && (improvement_steps <= max_iters)) {
+        improvement = false;
+        int_fast32_t best_diff = 0;
+        uint_fast32_t best_i = 0;
+        uint_fast32_t best_j = 0;
+
+        if (full_search) {
+            // Pure sequential 2-opt full neighborhood scan
+            for (size_t i = 0; i < tour_size - 1; ++i) {
+                for (size_t j = i + 1; j < tour_size; ++j) {
+                    int_fast32_t d = diff_after_invert(initial_tour, i, j, dist_matrix);
+                    if (d < best_diff) {
+                        best_diff = d;
+                        best_i = i;
+                        best_j = j;
+                    }
+                }
+            }
+        } else {
+            for (uint_fast32_t k = 0; k < sample_size; ++k) {
+                uint_fast32_t i = dist(GEN);
+                uint_fast32_t j = dist(GEN);
+                while (j == i) j = dist(GEN);
+                
+                if (i > j) std::swap(i, j);
+                
+                int_fast32_t d = diff_after_invert(initial_tour, i, j, dist_matrix);
+                if (d < best_diff) { 
+                    best_diff = d; 
+                    best_i = i; 
+                    best_j = j; 
+                }
+            }
+        }
+
+        if (best_diff < 0) {
+            std::reverse(initial_tour.begin() + best_i, initial_tour.begin() + best_j + 1);
+            current_distance = static_cast<uint_fast32_t>(
+                static_cast<int_fast64_t>(current_distance) + best_diff);
+            ++improvement_steps;
+            improvement = true;
+        }
+    }
+    
     return {initial_tour, current_distance, improvement_steps, sample_size};
 }
 
@@ -396,8 +457,8 @@ static std::vector<std::vector<uint_fast32_t>> next_generation(
         if (prob_dist(rng) < gp.mut_prob) mutate_invert(child2, rng);
 
         if (gp.memetic) {
-            child1 = local_search(child1, dist_matrix, rng, 0, memetic_iters).tour;
-            child2 = local_search(child2, dist_matrix, rng, 0, memetic_iters).tour;
+            child1 = local_search_mp(child1, dist_matrix, rng, 0, memetic_iters).tour;
+            child2 = local_search_mp(child2, dist_matrix, rng, 0, memetic_iters).tour;
         }
 
         new_pop.push_back(std::move(child1));
@@ -451,6 +512,7 @@ GAResult genetic_algorithm(
     uint_fast32_t no_improve = 0;
 
     for (uint_fast32_t gen = 0; gen < params.max_generations; ++gen) {
+        if(params.memetic) std::cout<< "GEN: " << gen << "/" << params.max_generations << "\n";
         pop = next_generation(pop, fitness, best_tour, best_dist,
                               dist_matrix, GEN, params, memetic_iters);
 

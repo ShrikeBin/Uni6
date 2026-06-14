@@ -11,14 +11,15 @@
 std::random_device RD;
 std::mt19937 GEN(RD());
 
-void run_exp_for_file(const std::vector<City>& cities, const std::string& filename) {
-    bool PRINT_TOURS    = false;
+void run_for_file(const std::vector<City>& cities, const std::string& filename) {
+    bool PRINT_TOURS    = true;
     bool DEBUG_ITER     = true;
     uint_fast32_t n     = cities.size();
 
     std::cout << "Loaded file: " << filename << " | Number of vertices (n): " << n << "\n\n";
 
-    if (n >= 2000) return;
+    // ── Skip big entries ─────────────────────────────────────────────────────────
+    // if (n >= 2000) return;
 
     // Build distance matrix
     std::vector<std::vector<uint_fast32_t>> dist_matrix(n, std::vector<uint_fast32_t>(n));
@@ -28,7 +29,7 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
 
     constexpr uint_fast32_t REPETITIONS = 10;
 
-    // ── Shared base params ────────────────────────────────────────────────────
+    // ── Base params ───────────────────────────────────────────────────────────
     GAParams base;
     base.pop_size         = 200;
     base.max_generations  = 1000;
@@ -37,9 +38,8 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
     base.mut_prob         = 0.05;
     base.tournament_k     = 5;
     base.memetic          = false;
-    base.memetic_2opt_iters = static_cast<uint_fast32_t>(std::sqrt(std::sqrt(n)));
+    base.memetic_2opt_iters = 5;
 
-    // Helper: print common GA param block
     auto print_params = [&](const GAParams& p) {
         std::cout << "Population size:    " << p.pop_size         << "\n"
                   << "Max generations:    " << p.max_generations  << "\n"
@@ -49,7 +49,6 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
                   << "Tournament k:       " << p.tournament_k     << "\n";
     };
 
-    // Helper: print result summary
     auto print_results = [&](uint_fast32_t best, double avg, double avg_gen,
                              const std::vector<uint_fast32_t>& tour) {
         std::cout << "Best distance:      " << best    << "\n"
@@ -63,7 +62,7 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
     };
 
     // ══════════════════════════════════════════════════════════════════════════
-    // Experiment 1: GA — OX crossover
+    // Task 1: GA — OX crossover
     // ══════════════════════════════════════════════════════════════════════════
     {
         GAParams params      = base;
@@ -99,7 +98,7 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // Experiment 2: GA — PMX crossover
+    // Task 2: GA — PMX crossover
     // ══════════════════════════════════════════════════════════════════════════
     {
         GAParams params       = base;
@@ -135,14 +134,14 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // Experiment 3: Memetic GA — OX + 2-opt local
+    // Task 3: Memetic GA — OX + 2-opt local
     // ══════════════════════════════════════════════════════════════════════════
     {
         GAParams params         = base;
         params.crossover_type   = CrossoverType::OX;
         params.memetic          = true;
-        params.max_generations  = 100;
-        params.memetic_2opt_iters = static_cast<uint_fast32_t>(std::sqrt(std::sqrt(n)));
+        params.max_generations  = 10;
+        params.memetic_2opt_iters = 5;
         params.no_improve_limit = 80;
 
         std::vector<uint_fast32_t> best_tour;
@@ -152,9 +151,9 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
 
         if (DEBUG_ITER)
                 std::cout << "\n";
-        for (uint_fast32_t rep = 1; rep <= REPETITIONS / 2; ++rep) {
+        for (uint_fast32_t rep = 1; rep <= static_cast<uint_fast32_t>(std::sqrt(REPETITIONS)); ++rep) {
             if (DEBUG_ITER)
-                std::cout << "Memetic rep " << rep << "/" << REPETITIONS / 2 << "\r" << std::flush;
+                std::cout << "Memetic rep " << rep << "/" << static_cast<uint_fast32_t>(std::sqrt(REPETITIONS)) << "\r" << std::flush;
 
             GAResult r = genetic_algorithm(n, dist_matrix, GEN, params);
             sum_dist  += r.best_distance;
@@ -176,7 +175,7 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // Experiment 4: Island GA — 4 islands, ring migration, OpenMP parallel
+    // Task 4: Island GA — 4 islands, ring migration
     // ══════════════════════════════════════════════════════════════════════════
     {
         GAParams island_ga      = base;
@@ -194,6 +193,8 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
         uint_fast32_t best_dist = std::numeric_limits<uint_fast32_t>::max();
         uint_fast64_t sum_dist  = 0;
 
+        if (DEBUG_ITER)
+                std::cout << "\n";
         for (uint_fast32_t rep = 1; rep <= REPETITIONS; ++rep) {
             if (DEBUG_ITER)
                 std::cout << "Island rep " << rep << "/" << REPETITIONS << "\r" << std::flush;
@@ -215,7 +216,7 @@ void run_exp_for_file(const std::vector<City>& cities, const std::string& filena
                   << "Migration size:     " << iparams.migration_size     << "\n";
         print_results(best_dist,
                       static_cast<double>(sum_dist) / REPETITIONS,
-                      0.0,   // generations_run not tracked per-island in IslandResult
+                      0.0,   // generations_run not tracked in Island
                       best_tour);
     }
 }
@@ -254,7 +255,7 @@ int main(int argc, char* argv[]) {
         std::cout << "------------------------------------------\n";
         auto start = std::chrono::high_resolution_clock::now();
 
-        run_exp_for_file(cities, filename);
+        run_for_file(cities, filename);
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> duration = end - start;
