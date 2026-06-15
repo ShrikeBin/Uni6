@@ -1,5 +1,25 @@
 # Lista 3 - Algorytmy Metaheurystyczne
 
+Sposoby krzyżowania:
+
+> Ordered Crossover (OX)
+
+Wybieramy losowo 2 indeksy, $x$ i $y$, t. że $x < y$.
+Dziecko tworzymy poprzez przepisanie elementów na indeksach pomiędzy $x$ i $y$ (włącznie) z pierwszego rodzica. Pozostałe wierzchołki są uzupełnione od indeksu $y + 1$ w takiej kolejności, w jakiej występują w drugim rodzicu.
+
+> Partially Mapped Crossover (PMX)
+
+Z pierwszego rodzica przenosimy jak w OX.
+Następnie rozważamy wierzchołki na indeksach od $x$ do $y$ z drugiego rodzica. Jeśli wierzchołek na miejscu $j_1$ nie znajduje się w dziecku, to próbujemy go dodać na miejsce $j_2$ zajmowane w drugim rodzicu przez wierzchołek znajdujący się w dziecku na pozycji $j_1$.
+Jeżeli miejsce $j_2$ również jest zajęte, to powtarzamy proces do momentu znalezienia miejsca.
+Pozostałe miejsca uzupełniamy wierzchołkami w tej kolejności, w jakiej występują w drugim rodzicu.
+
+Sposoby mutacji:
+
+> Inwersja
+
+Inwersja permutacji jak w sąsiedztwie
+
 
 ## Wyniki:
 

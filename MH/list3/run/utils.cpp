@@ -402,7 +402,7 @@ crossover_PMX(
     return { make_child(p1, p2), make_child(p2, p1) };
 }
 
-// ─── GA: Mutation — invert random sub-segment ─────────────────────────────────
+// ─── GA: Mutation — invert random ─────────────────────────────────────────────
 
 void mutate_invert(std::vector<uint_fast32_t>& tour, std::mt19937& GEN) {
     uint_fast32_t n = tour.size();
@@ -414,7 +414,7 @@ void mutate_invert(std::vector<uint_fast32_t>& tour, std::mt19937& GEN) {
     std::reverse(tour.begin() + i, tour.begin() + j + 1);
 }
 
-// ─── GA: one generation step (shared by both GA and island GA) ─────────────────
+// ─── GA: one generation step ──────────────────────────────────────────────────
 
 static std::vector<std::vector<uint_fast32_t>> next_generation(
     const std::vector<std::vector<uint_fast32_t>>& pop,
