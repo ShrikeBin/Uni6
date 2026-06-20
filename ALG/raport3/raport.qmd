@@ -34,7 +34,6 @@ jupyter: python3
 
 ```{python}
 A = 2; B = 8; C = 2; D = 2; E = 1; F = 0
-# czyli a=2, b=8, c=2, d=2, e=1, f=0
 ```
 
 ---
@@ -201,7 +200,7 @@ def poly_divide(f, divisors, order):
 ```
 
 **Syzygium (S-wielomian).** Dla $f,g$ z wiodącymi jednomianami $\mathrm{lm}(f),\mathrm{lm}(g)$ i $L=\mathrm{lcm}(\mathrm{lm}(f),\mathrm{lm}(g))$:
-$$S(f,g) = \frac{L}{\mathrm{LT}(f)}\, f \;-\; \frac{L}{\mathrm{LT}(g)}\, g$$
+$S(f,g) = \frac{L}{\mathrm{LT}(f)}\, f \;-\; \frac{L}{\mathrm{LT}(g)}\, g$
 — konstrukcja tak dobrana, by wiodące jednomiany $f$ i $g$ się skróciły; $S(f,g)$ "mierzy", czy $f,g$ generują wspólne consekwencje, których nie widać przy zwykłej redukcji.
 
 ```{python}
@@ -408,7 +407,7 @@ plt.show()
 **Pytanie dodatkowe — samo pierwsze równanie przy $z=a$:**
 
 Podstawiając $z=a$ do $(x^2+y^2-ax)^2 = z^2(x^2+y^2)$ dostajemy $(x^2+y^2-ax)^2=a^2(x^2+y^2)$, czyli w postaci $r^2=x^2+y^2,\;x=r\cos\theta$:
-$$(r^2-ar\cos\theta)^2=a^2r^2 \;\Longrightarrow\; (r-a\cos\theta)^2=a^2 \;\Longrightarrow\; r=a(1+\cos\theta) \;\;\text{lub}\;\; r=a(\cos\theta-1)$$
+$(r^2-ar\cos\theta)^2=a^2r^2 \;\Longrightarrow\; (r-a\cos\theta)^2=a^2 \;\Longrightarrow\; r=a(1+\cos\theta) \;\;\text{lub}\;\; r=a(\cos\theta-1)$
 obie gałęzie opisują tę samą krzywą — **kardioidę** $r=a(1+\cos\theta)$ (klasyczna krzywa biegunowa z osobliwością – ostrzem – w $\theta=\pi$).
 
 ```{python}
@@ -430,7 +429,7 @@ plt.show()
 # Lab 6e) – Trysektrysa Maclaurina
 
 Trysektrysa zadana jest w układzie biegunowym jako
-$$r = b\,\frac{\sqrt{4\cos\theta-1}}{\cos\theta}, \qquad b = B = 8.$$
+$r = b\,\frac{\sqrt{4\cos\theta-1}}{\cos\theta}, \qquad b = B = 8.$
 
 By znaleźć wzór wielomianowy w $x,y$ traktujemy $c=\cos\theta$, $r$ jako dodatkowe zmienne pomocnicze i budujemy ideał z relacjami:
 
