@@ -263,32 +263,33 @@ def reduce_basis(G, order):
 Na koniec baza jest **minimalizowana** (usuwamy elementy, których wiodący jednomian jest podzielny przez wiodący jednomian innego elementu) i **redukowana** (każdy element redukujemy względem pozostałych) — otrzymana tak zredukowana bazę Gröbnera jest jednoznaczna dla danego ideału i porządku.
 
 ---
+# TODO TUTAJ DALEJ
 
-### c) – układy i rozmaitości
+### c) – Układy i rozmaitości
 
-# tu chyba powinno być $-z^2$
-
-Dla każdego z 5 wielomianów liniowych $f(x,y,z)$ poniżej liczymy bazę Gröbnera ideału $\langle x^2+y^2+z^2,\,f\rangle$ w porządku leksykograficznym $z \succ x \succ y$ (tak, by $z$ jako zmienna eliminowana była "najważniejsza" — w bazie Gröbnera porządku lex z $z$ na szczycie ostatni element bazy, niezawierający $z$, generuje **ideał eliminacji** $I_f = \langle x^2+y^2+z^2, f\rangle \cap \mathbb{R}[x,y]$, zgodnie z twierdzeniem o eliminacji).
+Dla każdego z 5 wielomianów liniowych $f(x,y,z)$ liczymy bazę Gröbnera ideału
+$\langle x^2+y^2-z^2,\,f\rangle$ w porządku lex $z \succ x \succ y$,
+następnie wyodrębniamy generator ideału eliminacji $I_f = \langle x^2+y^2-z^2,\,f\rangle \cap \mathbb{R}[x,y]$
+jako element bazy niezawierający $z$ (twierdzenie o eliminacji).
 
 ```{python}
 #| echo: false
 a, b, c, d, e, f_ = A, B, C, D, E, F
-sphere = MVPoly({(2,0,0): Fr(1), (0,2,0): Fr(1), (0,0,2): Fr(1)})
-order_c = lex_order([2, 0, 1])   # z > x > y  -> eliminujemy z
+cone = MVPoly({(2,0,0): Fr(1), (0,2,0): Fr(1), (0,0,2): Fr(-1)})
+order_c = lex_order([2, 0, 1])   # z > x > y
 
 f_list = [
-    ("(c+1)z",         MVPoly({(0,0,1): Fr(c+1)})),
-    ("z-d-1",          MVPoly({(0,0,1): Fr(1), (0,0,0): Fr(-d-1)})),
-    ("x-z+e-1",        MVPoly({(1,0,0): Fr(1), (0,0,1): Fr(-1), (0,0,0): Fr(e-1)})),
-    ("x-y+z-f-1",      MVPoly({(1,0,0): Fr(1), (0,1,0): Fr(-1), (0,0,1): Fr(1), (0,0,0): Fr(-f_-1)})),
-    ("y/a-z-1",        MVPoly({(0,1,0): Fr(1,a), (0,0,1): Fr(-1), (0,0,0): Fr(-1)})),
+    ("(c+1)z",    MVPoly({(0,0,1): Fr(c+1)})),
+    ("z+d+1",     MVPoly({(0,0,1): Fr(1), (0,0,0): Fr(d+1)})),
+    ("x+z-e-1",   MVPoly({(1,0,0): Fr(1), (0,0,1): Fr(1), (0,0,0): Fr(-e-1)})),
+    ("x+y+z+f+1", MVPoly({(1,0,0): Fr(1), (0,1,0): Fr(1), (0,0,1): Fr(1), (0,0,0): Fr(f_+1)})),
+    ("y/a+z+1",   MVPoly({(0,1,0): Fr(1,a), (0,0,1): Fr(1), (0,0,0): Fr(1)})),
 ]
 
 I_f_list = []
 for name, fpoly in f_list:
-    G = buchberger([sphere, fpoly], order_c)
+    G = buchberger([cone, fpoly], order_c)
     Gr = reduce_basis(G, order_c)
-    # generator wolny od z to ostatni element (najnizszy w porzadku z>x>y)
     gen_xy = [g for g in Gr if g.data and all(mon[2] == 0 for mon in g.data)]
     print(f"f = {name}:")
     for g in Gr:
@@ -298,42 +299,75 @@ for name, fpoly in f_list:
     I_f_list.append((name, gen_xy[0]))
 ```
 
-**Podsumowanie ideałów $I_f \subset \mathbb{R}[x,y]$ (po przeskalowaniu do prostszej postaci):**
+**Podsumowanie ideałów $I_f \subset \mathbb{R}[x,y]$:**
 
 | $f(x,y,z)$ | $I_f = \langle\,\cdot\,\rangle$ | Rozmaitość $V(I_f)$ |
 |---|---|---|
 | $(c{+}1)z = 3z$ | $x^2+y^2$ | punkt $(0,0)$ |
-| $z-d-1=z-3$ | $x^2+y^2+9$ | zbiór pusty |
-| $x-z+e-1=x-z$ | $2x^2+y^2$ | punkt $(0,0)$ |
-| $x-y+z-f-1$ | $2x^2-2xy-2x+2y^2+2y+1$ | zbiór pusty |
-| $\tfrac{y}{a}-z-1$ | $x^2+\tfrac54y^2-y+1$ | zbiór pusty |
+| $z+d+1 = z+3$ | $x^2+y^2-9$ | okrąg $r=3$ |
+| $x+z-e-1 = x+z-2$ | $x + \tfrac{1}{4}y^2 - 1$ | parabola |
+| $x+y+z+f+1 = x+y+z+1$ | $xy+x+y+\tfrac{1}{2}$ | hiperbola |
+| $\tfrac{y}{a}+z+1 = \tfrac{y}{2}+z+1$ | $x^2+\tfrac{3}{4}y^2-y-1$ | elipsa |
 
-**Uzasadnienie kształtu krzywych.** Podstawiając $f=0$ (czyli wyrażając $z$ z równania liniowego) do $x^2+y^2+z^2=0$ dostajemy zawsze formę kwadratową $q(x,y)=0$ w $x,y$. Ponieważ pracujemy nad $\mathbb{R}$, a $x^2+y^2+z^2$ jest sumą kwadratów, jedynym rzeczywistym rozwiązaniem wyjściowego układu może być **punkt** (gdy po podstawieniu $z=z(x,y)$ otrzymana forma kwadratowa zeruje się tylko w $(0,0)$, jak w przypadkach 1 i 3, gdzie $z(x,y)=0$ w punkcie $(0,0)$) albo **zbiór pusty** (gdy minimum formy $q(x,y)$ jest dodatnie — sfera o promieniu zero przesunięta przez podstawienie $z\neq 0$ przy $x=y=0$ nigdy nie przecina płaszczyzny rzeczywiście, jak w przypadkach 2, 4, 5). Innymi słowy: $x^2+y^2+z^2=0$ nad $\mathbb{R}$ opisuje wyłącznie początek układu $(0,0,0)$, więc przecięcie z płaszczyzną $f=0$ jest niepuste (i jest punktem) dokładnie wtedy, gdy płaszczyzna przechodzi przez początek układu — co zachodzi dla $f_1=(c{+}1)z$ i $f_3=x-z$ (oba zerują się w $(0,0,0)$), a jest puste dla pozostałych (ich płaszczyzny omijają początek układu).
+**Uzasadnienie kształtu krzywych.**
+Geometrycznie każdy przypadek to przekrój stożka $x^2+y^2=z^2$ płaszczyzną $f=0$:
+wyrażając $z$ z równania płaszczyzny i podstawiając do stożka dostajemy krzywą drugiego
+stopnia w $x,y$ — klasyczne przekroje stożkowe.
+
+- **Przypadek 1** $f=(c{+}1)z=0$: płaszczyzna $z=0$ przecina stożek wzdłuż wierzchołka
+  — wynik to $x^2+y^2=0$, czyli **punkt** $(0,0)$.
+- **Przypadek 2** $f=z+3=0$ czyli $z=-3$: pozioma płaszczyzna równoległa do podstawy
+  stożka daje **okrąg** $x^2+y^2=9$, $r=3$.
+- **Przypadek 3** $f=x+z-2=0$ czyli $z=2-x$: płaszczyzna pochylona równolegle do
+  jednej tworzącej stożka ($z=x$) — przekrój jest **parabolą** $x=1-\tfrac{1}{4}y^2$.
+- **Przypadek 4** $f=x+y+z+1=0$: płaszczyzna ogólnego położenia przecinająca obie
+  czasze stożka — wynik $xy+x+y+\tfrac{1}{2}=0$, czyli
+  $(x+1)(y+1)=\tfrac{1}{2}$ — **hiperbola** (osie obrócone o $45°$).
+- **Przypadek 5** $f=\tfrac{y}{2}+z+1=0$: płaszczyzna skośna nieprzechodząca przez
+  żadną tworzącą — przekrój to **elipsa** $x^2+\tfrac{3}{4}y^2-y-1=0$.
 
 ```{python}
 #| echo: false
 import numpy as np
 import matplotlib.pyplot as plt
 
-fig, axes = plt.subplots(1, 5, figsize=(18, 3.6))
-titles = [r'$x^2+y^2=0$', r'$x^2+y^2=-9$', r'$2x^2+y^2=0$',
-          r'$2x^2{-}2xy{-}2x{+}2y^2{+}2y{+}1=0$', r'$x^2{+}\frac{5}{4}y^2{-}y{+}1=0$']
-# klasyfikacja wyznaczona analitycznie (patrz tabela wyżej): True = pojedynczy punkt (0,0), False = zbiór pusty
-is_point = [True, False, True, False, False]
-for ax, title, pt in zip(axes, titles, is_point):
-    if pt:
+fig, axes = plt.subplots(1, 5, figsize=(18, 3.8))
+
+configs = [
+    ("punkt $(0,0)$",  lambda X,Y: X**2 + Y**2,               (-4,4),  [0]),
+    ("okrąg $r=3$",    lambda X,Y: X**2 + Y**2 - 9,            (-4,4),  [0]),
+    ("parabola",       lambda X,Y: X + 0.25*Y**2 - 1,          (-4,4),  [0]),
+    ("hiperbola",      lambda X,Y: X*Y + X + Y + 0.5,          (-4,4),  [0]),
+    ("elipsa",         lambda X,Y: X**2 + 0.75*Y**2 - Y - 1,  (-4,4),  [0]),
+]
+titles = [
+    r"$x^2+y^2=0$",
+    r"$x^2+y^2=9$",
+    r"$x+\frac{1}{4}y^2=1$",
+    r"$xy+x+y+\frac{1}{2}=0$",
+    r"$x^2+\frac{3}{4}y^2-y-1=0$",
+]
+
+for ax, (label, expr, rng, lvls), title in zip(axes, configs, titles):
+    xv = np.linspace(rng[0], rng[1], 500)
+    yv = np.linspace(rng[0], rng[1], 500)
+    X, Y = np.meshgrid(xv, yv)
+    Z = expr(X, Y)
+    if label.startswith("punkt"):
         ax.plot(0, 0, 'ro', markersize=7)
-        ax.text(0.1, 0.1, '(0,0)', fontsize=9)
     else:
-        ax.text(0.5, 0.5, 'zbiór\npusty', transform=ax.transAxes, fontsize=10,
-                color='gray', ha='center', va='center')
-    ax.set_xlim(-2, 2); ax.set_ylim(-2, 2)
+        ax.contour(X, Y, Z, levels=lvls, colors='#2a6f97')
+    ax.set_xlim(rng); ax.set_ylim(rng)
     ax.set_title(title, fontsize=8)
     ax.set_aspect('equal')
+    ax.axhline(0, color='lightgray', lw=0.5)
+    ax.axvline(0, color='lightgray', lw=0.5)
+
 plt.tight_layout()
 plt.savefig('zad_c.pdf', bbox_inches='tight', dpi=180)
 plt.show()
 ```
+
 
 ---
 
