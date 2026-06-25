@@ -36,7 +36,7 @@ jupyter: python3
 A = 2; B = 8; C = 2; D = 2; E = 1; F = 0
 ```
 
----
+
 
 ### a) – Implementacja pierścienia wielomianów wielu zmiennych $\mathbb{R}[x_1,\ldots,x_n]$
 
@@ -135,7 +135,7 @@ class MVPoly:
         return res
 ```
 
----
+
 
 ### b) – PolynomialReduce, Syzygium i algorytm Buchbergera
 
@@ -146,7 +146,7 @@ class MVPoly:
 def lex_order(perm=None):
     def cmp(a, b):
         n = max(len(a), len(b))
-        # Równanie długości (jeśli a jest np dwóch zmiennych a b trzech)
+        # wyrównanie długości (jeśli a jest np dwóch zmiennych a b trzech)
         a = a + (0,)*(n-len(a))
         b = b + (0,)*(n-len(b))
         idx = perm if perm is not None else list(range(n))
@@ -262,8 +262,6 @@ def reduce_basis(G, order):
 
 Na koniec baza jest **minimalizowana** (usuwamy elementy, których wiodący jednomian jest podzielny przez wiodący jednomian innego elementu) i **redukowana** (każdy element redukujemy względem pozostałych) — otrzymana tak zredukowana bazę Gröbnera jest jednoznaczna dla danego ideału i porządku.
 
----
-# TODO TUTAJ DALEJ
 
 ### c) – Układy i rozmaitości
 
@@ -309,22 +307,6 @@ for name, fpoly in f_list:
 | $x+y+z+f+1 = x+y+z+1$ | $xy+x+y+\tfrac{1}{2}$ | hiperbola |
 | $\tfrac{y}{a}+z+1 = \tfrac{y}{2}+z+1$ | $x^2+\tfrac{3}{4}y^2-y-1$ | elipsa |
 
-**Uzasadnienie kształtu krzywych.**
-Geometrycznie każdy przypadek to przekrój stożka $x^2+y^2=z^2$ płaszczyzną $f=0$:
-wyrażając $z$ z równania płaszczyzny i podstawiając do stożka dostajemy krzywą drugiego
-stopnia w $x,y$ — klasyczne przekroje stożkowe.
-
-- **Przypadek 1** $f=(c{+}1)z=0$: płaszczyzna $z=0$ przecina stożek wzdłuż wierzchołka
-  — wynik to $x^2+y^2=0$, czyli **punkt** $(0,0)$.
-- **Przypadek 2** $f=z+3=0$ czyli $z=-3$: pozioma płaszczyzna równoległa do podstawy
-  stożka daje **okrąg** $x^2+y^2=9$, $r=3$.
-- **Przypadek 3** $f=x+z-2=0$ czyli $z=2-x$: płaszczyzna pochylona równolegle do
-  jednej tworzącej stożka ($z=x$) — przekrój jest **parabolą** $x=1-\tfrac{1}{4}y^2$.
-- **Przypadek 4** $f=x+y+z+1=0$: płaszczyzna ogólnego położenia przecinająca obie
-  czasze stożka — wynik $xy+x+y+\tfrac{1}{2}=0$, czyli
-  $(x+1)(y+1)=\tfrac{1}{2}$ — **hiperbola** (osie obrócone o $45°$).
-- **Przypadek 5** $f=\tfrac{y}{2}+z+1=0$: płaszczyzna skośna nieprzechodząca przez
-  żadną tworzącą — przekrój to **elipsa** $x^2+\tfrac{3}{4}y^2-y-1=0$.
 
 ```{python}
 #| echo: false
@@ -358,7 +340,7 @@ for ax, (label, expr, rng, lvls), title in zip(axes, configs, titles):
     else:
         ax.contour(X, Y, Z, levels=lvls, colors='#2a6f97')
     ax.set_xlim(rng); ax.set_ylim(rng)
-    ax.set_title(title, fontsize=8)
+    ax.set_title(title, fontsize=26)
     ax.set_aspect('equal')
     ax.axhline(0, color='lightgray', lw=0.5)
     ax.axvline(0, color='lightgray', lw=0.5)
@@ -368,8 +350,6 @@ plt.savefig('zad_c.pdf', bbox_inches='tight', dpi=180)
 plt.show()
 ```
 
-
----
 
 ### d) – Układ $(x^2+y^2-ax)^2 = z^2(x^2+y^2)$, $x+2y+3z=0$
 
@@ -391,65 +371,65 @@ for g in Grd:
     print("  ", g)
 ```
 
-Po eliminacji $x$ (drugi element bazy, wolny od $x$) otrzymujemy jedną krzywą stopnia 4 w zmiennych $y,z$ — to generator ideału eliminacji opisującego rzut rozwiązań na płaszczyznę $(y,z)$.
+Po eliminacji $x$ z drugiego elementu bazy otrzymujemy jedną krzywą stopnia 4 w zmiennych $y,z$ - generator ideału eliminacji opisującego rzut rozwiązań na płaszczyznę $(y,z)$.
+
+Podstawiając $z=a$ do $(x^2+y^2-ax)^2 = z^2(x^2+y^2)$ dostajemy $(x^2+y^2-2x)^2=4(x^2+y^2)$, co w postaci $r^2=x^2+y^2,\;x=r\cos\theta$ daje:
+$(r^2-2r\cos\theta)^2=4r^2 \;\Longrightarrow\; (r-2\cos\theta)^2=4 \;\Longrightarrow\; r=2(1+\cos\theta) \;\;\text{lub}\;\; r=2(\cos\theta-1)$
+obia przypadki opisują tę samą krzywą różniącą się jedynie zwrotem — **kardioidę** $r=a(1+\cos\theta)$ we współrzędnych biegunowych.
+
+```{python}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+yv = np.linspace(-3, 3, 600)
+zv = np.linspace(-3, 3, 600)
+Y, Z = np.meshgrid(yv, zv)
+poly_d = (25*Y**4 + 120*Y**3*Z + 40*Y**3 + 229*Y**2*Z**2 + 156*Y**2*Z + 16*Y**2
+          + 204*Y*Z**3 + 216*Y*Z**2 + 48*Y*Z + 72*Z**4 + 108*Z**3 + 36*Z**2)
+theta = np.linspace(0, 2*np.pi, 1000)
+r = a * (1 + np.cos(theta))
+xc, yc = r * np.cos(theta), r * np.sin(theta)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.5))
+
+ax1.contour(Y, Z, poly_d, levels=[0], colors='#7b2d8e')
+ax1.set_xlabel('y')
+ax1.set_ylabel('z')
+ax1.set_title('Rzut rozwiązań układu d)\nna płaszczyznę (y,z)', fontsize=10)
+ax1.set_aspect('equal')
+ax1.grid(True, linestyle='--', alpha=0.5)
+
+ax2.plot(xc, yc, color='#c8102e', linewidth=2)
+ax2.set_xlabel('x')
+ax2.set_ylabel('y')
+ax2.set_title(f"$z=a={a}$:\n" + r"kardioida $r=a(1+\cos\theta)$", fontsize=10)
+ax2.set_aspect('equal')
+ax2.grid(True, linestyle='--', alpha=0.5)
+
+plt.tight_layout()
+plt.savefig('zad_d.pdf', bbox_inches='tight', dpi=180)
+plt.show()
+```
+
+
+### e) – Trysektrysa 
+
+Trysektrysa zadana jest w układzie biegunowym jako:
+$r = b \left( 4\cos\theta + \frac{1}{\cos\theta} \right), \qquad b = B = 8.$
+
+Niech $c=\cos\theta$ oraz $r$ jako dodatkowe zmienne pomocnicze. Wtedy:
+
+- $x = r\cdot c$ {definicja $x$ we współrzędnych biegunowych},
+- $r^2 = x^2+y^2$ {tożsamość biegunowa},
+- $x = b(4c^2+1)$ {$r = b(4c + 1/c) \implies rc = b(4c^2 + 1) \implies x = b(4c^2+1)$}.
+
+Liczymy bazę Gröbnera w porządku lex $c \succ r \succ x \succ y$, eliminując zmienne $c$ i $r$.
 
 ```{python}
 #| echo: false
 import numpy as np
 import matplotlib.pyplot as plt
 
-yv = np.linspace(-3, 3, 600); zv = np.linspace(-3, 3, 600)
-Y, Z = np.meshgrid(yv, zv)
-poly_d = (25*Y**4 + 120*Y**3*Z + 40*Y**3 + 229*Y**2*Z**2 + 156*Y**2*Z + 16*Y**2
-          + 204*Y*Z**3 + 216*Y*Z**2 + 48*Y*Z + 72*Z**4 + 108*Z**3 + 36*Z**2)
-
-fig, ax = plt.subplots(figsize=(5, 5))
-ax.contour(Y, Z, poly_d, levels=[0], colors='#7b2d8e')
-ax.set_xlabel('y'); ax.set_ylabel('z')
-ax.set_title('Rzut rozwiązań układu d) na płaszczyznę (y,z)')
-ax.set_aspect('equal')
-plt.tight_layout()
-plt.savefig('zad_d.pdf', bbox_inches='tight', dpi=180)
-plt.show()
-```
-
-**Pytanie dodatkowe — samo pierwsze równanie przy $z=a$:**
-
-Podstawiając $z=a$ do $(x^2+y^2-ax)^2 = z^2(x^2+y^2)$ dostajemy $(x^2+y^2-ax)^2=a^2(x^2+y^2)$, czyli w postaci $r^2=x^2+y^2,\;x=r\cos\theta$:
-$(r^2-ar\cos\theta)^2=a^2r^2 \;\Longrightarrow\; (r-a\cos\theta)^2=a^2 \;\Longrightarrow\; r=a(1+\cos\theta) \;\;\text{lub}\;\; r=a(\cos\theta-1)$
-obie gałęzie opisują tę samą krzywą — **kardioidę** $r=a(1+\cos\theta)$ (klasyczna krzywa biegunowa z osobliwością – ostrzem – w $\theta=\pi$).
-
-```{python}
-#| echo: false
-theta = np.linspace(0, 2*np.pi, 1000)
-r = a*(1+np.cos(theta))
-xc, yc = r*np.cos(theta), r*np.sin(theta)
-fig, ax = plt.subplots(figsize=(4.5, 4.5))
-ax.plot(xc, yc, color='#c8102e')
-ax.set_title(fr'$z=a={a}$: kardioida $r=a(1+\cos\theta)$')
-ax.set_aspect('equal')
-plt.tight_layout()
-plt.savefig('zad_d_cardioida.pdf', bbox_inches='tight', dpi=180)
-plt.show()
-```
-
----
-
-### e) – Trysektrysa Maclaurina
-
-Trysektrysa zadana jest w układzie biegunowym jako
-$r = b\,\frac{\sqrt{4\cos\theta-1}}{\cos\theta}, \qquad b = B = 8.$
-
-By znaleźć wzór wielomianowy w $x,y$ traktujemy $c=\cos\theta$, $r$ jako dodatkowe zmienne pomocnicze i budujemy ideał z relacjami:
-
-- $x = r\cdot c$  (definicja $x$ we współrzędnych biegunowych),
-- $r^2 = x^2+y^2$  (tożsamość biegunowa, eliminuje potrzebę jawnego $\sin\theta$),
-- $x^2 = b^2(4c-1)$  (podniesione do kwadratu równanie krzywej: z $r\cos\theta=x$ i $r=b\sqrt{4c-1}/c$ mamy $rc=b\sqrt{4c-1}\Rightarrow x=b\sqrt{4c-1}\Rightarrow x^2=b^2(4c-1)$).
-
-Liczymy bazę Gröbnera w porządku lex $c \succ r \succ x \succ y$, eliminując $c$ i $r$.
-
-```{python}
-#| echo: false
 def lex_order4(perm):
     def cmp(a, b):
         for i in perm:
@@ -459,9 +439,12 @@ def lex_order4(perm):
     return cmp
 
 bb = Fr(B)
-e1e = MVPoly({(0,0,1,0): Fr(1)}, 4) - MVPoly({(1,1,0,0): Fr(1)}, 4)          # x - r*c
-e2e = MVPoly({(0,2,0,0): Fr(1)}, 4) - MVPoly({(0,0,2,0): Fr(1)}, 4) - MVPoly({(0,0,0,2): Fr(1)}, 4)  # r^2-x^2-y^2
-e3e = MVPoly({(0,0,2,0): Fr(1)}, 4) - (MVPoly({(1,0,0,0): Fr(4)*bb*bb}, 4) - MVPoly({(0,0,0,0): bb*bb}, 4))  # x^2-b^2(4c-1)
+# 1. x - r*c = 0
+e1e = MVPoly({(0,0,1,0): Fr(1)}, 4) - MVPoly({(1,1,0,0): Fr(1)}, 4)          
+# 2. r^2 - x^2 - y^2 = 0
+e2e = MVPoly({(0,2,0,0): Fr(1)}, 4) - MVPoly({(0,0,2,0): Fr(1)}, 4) - MVPoly({(0,0,0,2): Fr(1)}, 4)  
+# 3. x - 4b*c^2 - b = 0
+e3e = MVPoly({(0,0,1,0): Fr(1)}, 4) - MVPoly({(2,0,0,0): Fr(4) * bb}, 4) - MVPoly({(0,0,0,0): bb}, 4)  
 
 order_e = lex_order4([0, 1, 2, 3])  # c > r > x > y
 Ge = buchberger([e1e, e2e, e3e], order_e)
@@ -475,35 +458,115 @@ def show4(p):
         terms.append(f"{coef}{s}" if s else f"{coef}")
     return " + ".join(terms).replace("+ -", "- ")
 
-print("Zredukowana baza Gröbnera (eliminacja c, r), b =", B, ":")
+print("Zredukowana baza Gröbnera (eliminacja c, r), dla b =", B, ":")
 for g in Gre:
     print("  ", show4(g))
 
 xy_gen = [g for g in Gre if all(mon[0]==0 and mon[1]==0 for mon in g.data)][0]
 print()
-print("Wielomianowy wzór trysektrysy w x,y:")
+print("Wielomianowy wzór rozmaitości w x,y:")
 print("  ", show4(xy_gen), " = 0")
 ```
 
-Otrzymana krzywa jest stopnia 6 (podniesienie do kwadratu pierwiastka w definicji podwaja stopień minimalnej, sześciennej trysektrysy Maclaurina — opisuje więc nieco szerszą rozmaitość algebraiczną, zawierającą trysektrysę jako składową).
+Podejrzewam jednak, że w zadaniu wkrałd się błąd i krzywa powinna była być zdefiniowana jako
+$r = b \left( 4\cos\theta - \frac{1}{\cos\theta} \right), \qquad b = B = 8.$
+Wtedy:
+
+- $x = r\cdot c$ 
+- $r^2 = x^2+y^2$ 
+- $x = b(4c^2-1)$
+```{python}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+def lex_order4(perm):
+    def cmp(a, b):
+        for i in perm:
+            if a[i] > b[i]: return 1
+            if a[i] < b[i]: return -1
+        return 0
+    return cmp
+
+bb = Fr(B)
+# 1. x - r*c = 0
+e1e = MVPoly({(0,0,1,0): Fr(1)}, 4) - MVPoly({(1,1,0,0): Fr(1)}, 4)          
+# 2. r^2 - x^2 - y^2 = 0
+e2e = MVPoly({(0,2,0,0): Fr(1)}, 4) - MVPoly({(0,0,2,0): Fr(1)}, 4) - MVPoly({(0,0,0,2): Fr(1)}, 4)  
+# 3. x - 4b*c^2 + b = 0
+e3e = MVPoly({(0,0,1,0): Fr(1)}, 4) - MVPoly({(2,0,0,0): Fr(4) * bb}, 4) + MVPoly({(0,0,0,0): bb}, 4)  
+
+order_e = lex_order4([0, 1, 2, 3])  # c > r > x > y
+Ge = buchberger([e1e, e2e, e3e], order_e)
+Gre = reduce_basis(Ge, order_e)
+
+names4 = ['c', 'r', 'x', 'y']
+def show4(p):
+    terms = []
+    for mon, coef in sorted(p.data.items(), reverse=True):
+        s = "".join((f"[{names4[i]}^{e}]" if e>1 else f"[{names4[i]}]") for i,e in enumerate(mon) if e>0)
+        terms.append(f"{coef}{s}" if s else f"{coef}")
+    return " + ".join(terms).replace("+ -", "- ")
+
+print("Zredukowana baza Gröbnera (eliminacja c, r), dla b =", B, ":")
+for g in Gre:
+    print("  ", show4(g))
+
+xy_gen = [g for g in Gre if all(mon[0]==0 and mon[1]==0 for mon in g.data)][0]
+print()
+print("Wielomianowy wzór poprawnej trysektrysy w x,y:")
+print("  ", show4(xy_gen), " = 0")
+```
+
+Otrzymujemy wykresy:
 
 ```{python}
 #| echo: false
-theta_e = np.linspace(-1.3, 1.3, 3000)
-c_e = np.cos(theta_e)
-mask = 4*c_e - 1 >= 0
-theta_e, c_e = theta_e[mask], c_e[mask]
-r_e = float(B) * np.sqrt(4*c_e - 1) / c_e
-xe, ye = r_e*c_e, r_e*np.sin(theta_e)
+import numpy as np
+import matplotlib.pyplot as plt
 
-fig, ax = plt.subplots(figsize=(5, 5))
-ax.plot(xe, ye, color='#2a6f97')
-ax.axvline(0, color='lightgray', lw=0.6); ax.axhline(0, color='lightgray', lw=0.6)
-ax.set_aspect('equal')
-ax.set_title(fr'Trysektrysa Maclaurina, $b={B}$')
+b_val = float(B)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+
+xv = np.linspace(-15, 45, 500)
+yv = np.linspace(-40, 40, 500)
+X, Y = np.meshgrid(xv, yv)
+
+# 1. Definicja rozmaitości oryginalnej z zadania 
+poly_original = X**3 - 40*(X**2) + X*(Y**2) - 8*(Y**2)
+
+# 2. Definicja poprawnej trysektrysy 
+poly_trisectrix = X**3 - 24*(X**2) + X*(Y**2) + 8*(Y**2)
+
+ax1.contour(X, Y, poly_original, levels=[0], colors='#2a6f97', linewidths=2)
+
+ax1.axvline(b_val, color='#e63946', linestyle='--', lw=1.2)
+
+ax1.axvline(0, color='lightgray', lw=0.6)
+ax1.axhline(0, color='lightgray', lw=0.6)
+ax1.set_xlim(-5, 45)
+ax1.set_ylim(-35, 35)
+ax1.set_aspect('equal')
+ax1.grid(True, linestyle='--', alpha=0.5)
+ax1.set_title(f"Rozmaitość oryginalna ($b={B}$)")
+
+
+ax2.contour(X, Y, poly_trisectrix, levels=[0], colors='#1d3557', linewidths=2)
+
+ax2.axvline(-b_val, color='#e63946', linestyle='--', lw=1.2)
+
+ax2.axvline(0, color='lightgray', lw=0.6)
+ax2.axhline(0, color='lightgray', lw=0.6)
+ax2.set_xlim(-15, 30)
+ax2.set_ylim(-20, 20)
+ax2.set_aspect('equal')
+ax2.grid(True, linestyle='--', alpha=0.5)
+ax2.set_title("Wykres policzonej krzywej dla - zamiast +")
+
 plt.tight_layout()
 plt.savefig('zad_e.pdf', bbox_inches='tight', dpi=180)
 plt.show()
 ```
 
-**Do czego służy trysektrysa.** Trysektrysa Maclaurina to krzywa wprowadzona przez Colina Maclaurina w 1742 roku, pozwalająca na **trysekcję dowolnego kąta** (podział na trzy równe części) za pomocą konstrukcji geometrycznej wykorzystującej tę krzywą jako dodatkowe narzędzie — czego nie da się zrobić klasycznie samym cyrklem i linijką (jeden z trzech klasycznych, nierozwiązywalnych problemów starożytności, obok kwadratury koła i podwojenia sześcianu). Krzywa powstaje jako miejsce geometryczne punktu przecięcia dwóch prostych obracających się wokół dwóch ustalonych punktów ze stosunkiem prędkości kątowych $1:3$.
+Trysektrysą są zazwyczaj wykorzystywane do konstrukcji potrójnego podziału kąta.
+
